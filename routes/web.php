@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,6 +14,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+//管理画面を表示する
+
+Route::middleware('auth')->group(function () {
+
+    // 管理画面
+    Route::get('/admin', fn() => '管理画面一覧（準備中）');
+
+
 });
