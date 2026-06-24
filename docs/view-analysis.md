@@ -15,7 +15,7 @@
 
 送信先
 
-- PUT /admin/tag/{id}
+- PUT /admin/tags/{id}
 
 送信値
 
@@ -103,7 +103,7 @@
 
 遷移先
 
-- GET /admin/tag/{id}/edit
+- GET /admin/tags/{id}/edit
 
 パラメータ
 
@@ -123,7 +123,7 @@
 
 遷移先
 
-- GET /admin/contact/{id}
+- GET /admin/contacts/{id}
 
 パラメータ
 
@@ -169,7 +169,7 @@
 
 送信先
 
-- DELETE /admin/contact/{id}
+- DELETE /admin/contacts/{id}
 
 パラメータ
 
@@ -273,7 +273,7 @@
 
 送信先
 
-- POST /contact
+- POST /contacts
 
 送信値
 
@@ -314,7 +314,7 @@
 
 送信先
 
-- POST /contact/confirm
+- POST /contacts/confirm
 
 送信値
 

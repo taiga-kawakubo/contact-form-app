@@ -22,7 +22,8 @@ Route::get('/',[ContactController::class,'index']);
 Route::post('/contacts/confirm',[ContactController::class,'confirm']);
 
 //お問い合わせフォームの作成
-Route::post('/contacts', [ContactController::class, 'store']);
+Route::post('/contacts', [ContactController::class, 'store'])
+    ->name('contact.store');
 
 //お問い合わせ完了画面
 Route::get('/contacts/thanks', [ContactController::class, 'thanks'])
@@ -37,7 +38,12 @@ Route::get('/contacts/thanks', [ContactController::class, 'thanks'])
 Route::middleware('auth')->group(function () {
 
     // 管理画面を表示する
-    Route::get('/admin', fn() => '管理画面一覧（準備中）');
+    Route::get('/admin',[AdminController::class,'index'])
+    ->name('admin.index');
 
+    // 詳細画面を表示する
+    Route::get('/admin/contacts/{contact}',[AdminController::class,'show']);
 
+    // お問い合わせの削除
+    Route::delete('/admin/contacts/{contact}',[AdminController::class,'destroy']);
 });
