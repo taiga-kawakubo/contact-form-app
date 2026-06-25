@@ -8,19 +8,17 @@ use App\Models\Tag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-
-
 class TagTest extends TestCase
 {
     use RefreshDatabase;
 
     public function test_タグは複数のお問い合わせを持つ(): void
     {
-        
-        //テスト用のCategory・Contact・Tagを作成
+
+        // テスト用のCategory・Contact・Tagを作成
         $category = Category::create([
-                    'content' => '商品のお届けについて'
-                ]);
+            'content' => '商品のお届けについて',
+        ]);
         $contact1 = Contact::create([
             'category_id' => $category->id,
             'first_name' => '太郎',
@@ -44,7 +42,7 @@ class TagTest extends TestCase
             'detail' => '配送についての問い合わせ',
         ]);
         $tag = Tag::create([
-            'name' => '重要'
+            'name' => '重要',
         ]);
 
         // Tagと2件のContactを関連付ける

@@ -42,7 +42,6 @@ class Contact extends Model
         return $this->belongsToMany(Tag::class);
     }
 
-
     /**
      * キャストする属性
      */
@@ -50,13 +49,12 @@ class Contact extends Model
         'gender' => 'integer',
     ];
 
-
     /**
      * ジェンダーのラベルを取得
      */
     public function getGenderLabelAttribute(): string
     {
-        return match ($this->gender){
+        return match ($this->gender) {
             1 => '男性',
             2 => '女性',
             3 => 'その他',

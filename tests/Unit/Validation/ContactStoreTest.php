@@ -11,7 +11,6 @@ use Tests\TestCase;
 
 class ContactStoreTest extends TestCase
 {
-    
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -28,21 +27,21 @@ class ContactStoreTest extends TestCase
 
         $response = $this->post(
             route('contact.store'),
-                [
-                    'first_name' => '山田',
-                    'last_name' => '太郎',
-                    'gender' => 1,
-                    'email' => 'yamada@example.com',
-                    'tel' => '09012345678',
-                    'address' => '東京都渋谷区',
-                    'building' => 'テストビル',
-                    'category_id' => $category->id,
-                    'detail' => 'お問い合わせ内容',
-                    'tag_ids' => [
-                        $tag1->id,
-                        $tag2->id,
-                    ],
-                ]
+            [
+                'first_name' => '山田',
+                'last_name' => '太郎',
+                'gender' => 1,
+                'email' => 'yamada@example.com',
+                'tel' => '09012345678',
+                'address' => '東京都渋谷区',
+                'building' => 'テストビル',
+                'category_id' => $category->id,
+                'detail' => 'お問い合わせ内容',
+                'tag_ids' => [
+                    $tag1->id,
+                    $tag2->id,
+                ],
+            ]
         );
 
         $response->assertRedirect(
@@ -60,16 +59,15 @@ class ContactStoreTest extends TestCase
                 'category_id' => $category->id,
                 'detail' => 'お問い合わせ内容',
             ]
-            );
+        );
     }
-
 
     public function test_お問い合わせとタグの多対多リレーションが同期され保存される(): void
     {
         $contact = Contact::factory()->create();
-        $tag1 = Tag::create(['name' => 'テスト１',]);
-        $tag2 = Tag::create(['name' => 'テスト２',]);
-        
+        $tag1 = Tag::create(['name' => 'テスト１']);
+        $tag2 = Tag::create(['name' => 'テスト２']);
+
         $contact->tags()->sync([
             $tag1->id,
             $tag2->id,
@@ -91,13 +89,12 @@ class ContactStoreTest extends TestCase
         );
     }
 
-
     public function test_不正な電話番号は拒否する(): void
     {
         $category = Category::first();
 
         $response = $this->post(
-        route('contact.store'),
+            route('contact.store'),
             [
                 'first_name' => '山田',
                 'last_name' => '太郎',

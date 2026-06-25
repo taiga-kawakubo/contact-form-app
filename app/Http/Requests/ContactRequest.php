@@ -11,9 +11,9 @@ class ContactRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        if (!$this->filled('tel')) {
+        if (! $this->filled('tel')) {
             $this->merge([
-                'tel' => $this->tel1 . $this->tel2 . $this->tel3,
+                'tel' => $this->tel1.$this->tel2.$this->tel3,
             ]);
         }
     }
@@ -38,7 +38,7 @@ class ContactRequest extends FormRequest
             'email' => 'required|email|max:255',
             'tel' => 'required|string|regex:/^[0-9]{10,11}$/',
             'address' => 'required|string|max:255',
-            'building' =>'nullable|string|max:255',
+            'building' => 'nullable|string|max:255',
             'category_id' => 'required|integer|exists:categories,id',
             'detail' => 'required|string|max:120',
             'tag_ids' => 'nullable|array',
@@ -50,7 +50,8 @@ class ContactRequest extends FormRequest
      * バリデーションメッセージ
      */
     public function messages(): array
-    {return[
+    {
+        return [
             'first_name.required' => '姓を入力してください',
             'last_name.required' => '名を入力してください',
             'gender.required' => '性別を選択してください',

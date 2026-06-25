@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Contact;
-use App\Models\Category;
-use App\Models\Tag;
 use App\Http\Requests\ContactRequest;
+use App\Models\Category;
+use App\Models\Contact;
+use App\Models\Tag;
 
 class ContactController extends Controller
 {
@@ -18,7 +18,7 @@ class ContactController extends Controller
 
         $tags = Tag::orderBy('id')->get();
 
-        return view('contact.index',compact('tags','categories'));
+        return view('contact.index', compact('tags', 'categories'));
     }
 
     /**
@@ -31,7 +31,7 @@ class ContactController extends Controller
         $category = Category::find($validated['category_id']);
 
         $tags = collect();
-        if (!empty($validated['tag_ids'])) {
+        if (! empty($validated['tag_ids'])) {
             $tags = Tag::whereIn(
                 'id',
                 $validated['tag_ids']
@@ -39,7 +39,7 @@ class ContactController extends Controller
         }
 
         return view(
-            'contact.confirm',compact('category','tags','validated')
+            'contact.confirm', compact('category', 'tags', 'validated')
         );
     }
 
@@ -49,7 +49,7 @@ class ContactController extends Controller
     public function store(ContactRequest $request)
     {
         $validated = $request->validated();
-        $contactData = 
+        $contactData =
         [
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
@@ -66,7 +66,7 @@ class ContactController extends Controller
         $contact->tags()->sync(
             $validated['tag_ids'] ?? []
         );
-        
+
         return redirect()->route('contact.thanks');
     }
 
