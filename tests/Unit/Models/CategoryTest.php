@@ -7,8 +7,6 @@ use App\Models\Contact;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-
-
 class CategoryTest extends TestCase
 {
     use RefreshDatabase;
@@ -17,7 +15,7 @@ class CategoryTest extends TestCase
     {
         // テスト用のCategoryとContact1・Contact2を作成
         $category = Category::create([
-            'content' => '商品のお届けについて'
+            'content' => '商品のお届けについて',
         ]);
         $contact1 = Contact::create([
             'category_id' => $category->id,
@@ -46,6 +44,6 @@ class CategoryTest extends TestCase
         $contacts = $category->contacts;
 
         // Categoryから2件のContactを取得できることを確認
-        $this->assertCount(2,$contacts);
+        $this->assertCount(2, $contacts);
     }
 }

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Contact;
-use App\Models\Category;
-use App\Models\Tag;
 use App\Http\Requests\AdminSearchRequest;
+use App\Models\Category;
+use App\Models\Contact;
+use App\Models\Tag;
 
 class AdminController extends Controller
 {
@@ -14,30 +14,30 @@ class AdminController extends Controller
      */
     public function index(AdminSearchRequest $request)
     {
-        $query = Contact::with('category','tags');
+        $query = Contact::with('category', 'tags');
 
         // 名前・メール検索
         if ($request->filled('keyword')) {
-            
+
             $query->where(function ($query) use ($request) {
 
                 $query->where(
-                        'first_name',
-                        'like',
-                        '%' . $request->keyword . '%'
-                    )
+                    'first_name',
+                    'like',
+                    '%'.$request->keyword.'%'
+                )
                     ->orWhere(
                         'last_name',
                         'like',
-                        '%' . $request->keyword . '%'
+                        '%'.$request->keyword.'%'
                     )
                     ->orWhere(
                         'email',
                         'like',
-                        '%' . $request->keyword . '%'
+                        '%'.$request->keyword.'%'
                     )
                     ->orWhereRaw(
-                        "CONCAT(first_name, last_name) LIKE ?",
+                        'CONCAT(first_name, last_name) LIKE ?',
                         ["%{$request->keyword}%"]
                     )
                     ->orWhereRaw(
@@ -82,20 +82,19 @@ class AdminController extends Controller
 
         return view(
             'admin.index',
-            compact('contacts', 'categories','tags')
+            compact('contacts', 'categories', 'tags')
         );
     }
-    
+
     /**
      * お問い合わせ詳細の表示
      */
     public function show(string $id)
     {
-        $contact = Contact::with('category','tags')->findOrFail($id);
+        $contact = Contact::with('category', 'tags')->findOrFail($id);
 
-        return view('admin.show',compact('contact'));
+        return view('admin.show', compact('contact'));
     }
-
 
     /**
      * お問い合わせの削除
@@ -104,7 +103,7 @@ class AdminController extends Controller
     {
         $contact = Contact::findOrFail($id);
 
-        $contact -> delete();
+        $contact->delete();
 
         return redirect()->route('admin.index');
     }

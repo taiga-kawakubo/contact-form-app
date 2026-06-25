@@ -17,9 +17,9 @@ return new class extends Migration
             $table->foreignId('tag_id')->constrained()->onDelete('cascade');
             $table->timestamps();
             $table->unique([
-                        'contact_id',
-                        'tag_id',
-                    ]);
+                'contact_id',
+                'tag_id',
+            ]);
         });
     }
 

@@ -11,7 +11,6 @@ use Tests\TestCase;
 
 class ContactSearchTest extends TestCase
 {
-    
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -19,7 +18,6 @@ class ContactSearchTest extends TestCase
         parent::setUp();
         $this->seed(CategorySeeder::class);
     }
-    
 
     public function test_キーワード検索ができる(): void
     {
@@ -44,7 +42,6 @@ class ContactSearchTest extends TestCase
         $response->assertDontSee('佐藤');
     }
 
-
     public function test_性別検索ができる(): void
     {
         $user = User::factory()->create();
@@ -67,12 +64,11 @@ class ContactSearchTest extends TestCase
         $response->assertDontSee('女性ユーザー');
     }
 
-
     public function test_カテゴリー検索ができる(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        
+
         $category1 = Category::find(1);
         $category2 = Category::find(2);
         Contact::factory()->create([
@@ -91,7 +87,6 @@ class ContactSearchTest extends TestCase
         $response->assertSee('対象');
         $response->assertDontSee('対象外');
     }
-
 
     public function test_日付検索ができる(): void
     {
@@ -114,12 +109,11 @@ class ContactSearchTest extends TestCase
         $response->assertDontSee('昨日のデータ');
     }
 
-
     public function test_複数の条件で検索ができる(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $category = Category::find(1);;
+        $category = Category::find(1);
         Contact::factory()->create([
             'first_name' => '山田',
             'gender' => 1,
@@ -137,8 +131,7 @@ class ContactSearchTest extends TestCase
         $response->assertSee('山田');
     }
 
-
-    public function test_存在しない性別IDはバリデーションエラーになる(): void
+    public function test_存在しない性別idはバリデーションエラーになる(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -152,13 +145,12 @@ class ContactSearchTest extends TestCase
         ]);
     }
 
-
-    public function test_存在する性別IDはバリデーションエラーにならない():void
+    public function test_存在する性別idはバリデーションエラーにならない(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        foreach([1,2,3] as $gender){
+        foreach ([1, 2, 3] as $gender) {
             $response = $this->get(
                 "/admin?gender={$gender}"
             );
@@ -167,8 +159,7 @@ class ContactSearchTest extends TestCase
         $response->assertSessionHasNoErrors();
     }
 
-
-    public function test_存在しないカテゴリーIDはバリデーションエラーになる(): void
+    public function test_存在しないカテゴリー_idはバリデーションエラーになる(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -182,11 +173,10 @@ class ContactSearchTest extends TestCase
         ]);
     }
 
-
-    public function test_存在するカテゴリーIDはバリデーションエラーにならない(): void
+    public function test_存在するカテゴリー_idはバリデーションエラーにならない(): void
     {
         $user = User::factory()->create();
-        $category = Category::find(1);;
+        $category = Category::find(1);
         $this->actingAs($user);
 
         $response = $this->get(
@@ -195,7 +185,6 @@ class ContactSearchTest extends TestCase
 
         $response->assertSessionHasNoErrors();
     }
-
 
     public function test_日付形式でない入力はバリデーションエラーになる(): void
     {
@@ -211,19 +200,17 @@ class ContactSearchTest extends TestCase
         ]);
     }
 
-
     public function test_日付形式での入力はバリデーションエラーにならないこと(): void
-        {
+    {
         $user = User::factory()->create();
         $this->actingAs($user);
 
         $response = $this->get(
             '/admin?date=2026-06-24'
         );
-        
+
         $response->assertSessionHasNoErrors();
     }
-    
 
     public function test_キーワード検索で文字数が超えた場合はバリデーションエラーになる(): void
     {
@@ -241,7 +228,6 @@ class ContactSearchTest extends TestCase
         ]);
     }
 
-
     public function test_キーワード検索で文字数が超えない場合はバリデーションエラーにならない(): void
     {
         $user = User::factory()->create();
@@ -254,7 +240,6 @@ class ContactSearchTest extends TestCase
 
         $response->assertSessionHasNoErrors();
     }
-
 
     public function test_キーワード検索で検索欄が空の場合もバリデーションエラーにならない(): void
     {

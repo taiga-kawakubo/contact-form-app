@@ -10,8 +10,7 @@ class Tag extends Model
 {
     use HasFactory;
 
-
-/**
+    /**
      * 複数代入可能な属性
      */
     protected $fillable = [
@@ -25,5 +24,4 @@ class Tag extends Model
     {
         return $this->belongsToMany(Contact::class);
     }
-
 }
