@@ -2,7 +2,10 @@
 
 namespace App\Exceptions;
 
+use App\Models\Contact;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Request;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -19,12 +22,19 @@ class Handler extends ExceptionHandler
     ];
 
     /**
-     * Register the exception handling callbacks for the application.
+     * 404のエラーメッセージ
      */
     public function register(): void
     {
-        $this->reportable(function (Throwable $e) {
-            //
+        $this->renderable(function (ModelNotFoundException $e, Request $request) {
+            if (
+                $request->is('api/*')
+                && $e->getModel() === Contact::class
+            ) {
+                return response()->json([
+                    'error' => 'お問い合わせが見つかりませんでした。',
+                ], 404);
+            }
         });
     }
 }
