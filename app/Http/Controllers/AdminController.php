@@ -18,60 +18,36 @@ class AdminController extends Controller
 
         // 名前・メール検索
         if ($request->filled('keyword')) {
+            $keyword = $request->input('keyword');
 
-            $query->where(function ($query) use ($request) {
-
-                $query->where(
-                    'first_name',
-                    'like',
-                    '%'.$request->keyword.'%'
-                )
-                    ->orWhere(
-                        'last_name',
-                        'like',
-                        '%'.$request->keyword.'%'
-                    )
-                    ->orWhere(
-                        'email',
-                        'like',
-                        '%'.$request->keyword.'%'
-                    )
+            $query->where(function ($query) use ($keyword) {
+                $query->where('first_name','like','%'.$keyword.'%')
+                    ->orWhere('last_name','like','%'.$keyword.'%')
+                    ->orWhere('email','like','%'.$keyword.'%')
                     ->orWhereRaw(
                         'CONCAT(first_name, last_name) LIKE ?',
-                        ["%{$request->keyword}%"]
+                        ["%{$keyword}%"]
                     )
                     ->orWhereRaw(
                         "CONCAT(first_name, ' ', last_name) LIKE ?",
-                        ["%{$request->keyword}%"]
+                        ["%{$keyword}%"]
                     );
             });
         }
 
         // 性別
-        if (
-            $request->filled('gender')
-            && $request->gender !== '0'
-        ) {
-            $query->where(
-                'gender',
-                $request->gender
-            );
+        if ($request->filled('gender')&& $request->gender !== '0') {
+            $query->where('gender',$request->gender);
         }
 
         // 日付
         if ($request->filled('date')) {
-            $query->whereDate(
-                'created_at',
-                $request->date
-            );
+            $query->whereDate('created_at',$request->date);
         }
 
         // カテゴリー
         if ($request->filled('category_id')) {
-            $query->where(
-                'category_id',
-                $request->category_id
-            );
+            $query->where('category_id',$request->category_id);
         }
 
         $contacts = $query->paginate(7);

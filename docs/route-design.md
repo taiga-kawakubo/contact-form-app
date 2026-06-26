@@ -88,44 +88,27 @@ Prefix
 
 | **Method** | **URI** | **Controller** | **Action** | **認証** |
 | --- | --- | --- | --- | --- |
-| GET | /api/v1/contacts | Api\ContactController | index | auth:sanctum |
-| GET | /api/v1/contacts/{contact} | Api\ContactController | show | auth:sanctum |
+| GET | /api/v1/contacts | Api\ContactController | index | 不要 |
+| GET | /api/v1/contacts/{contact} | Api\ContactController | show | 不要 |
 | POST | /api/v1/contacts | Api\ContactController | store | 不要 |
-| PUT | /api/v1/contacts/{contact} | Api\ContactController | update | auth:sanctum |
-| DELETE | /api/v1/contacts/{contact} | Api\ContactController | destroy | auth:sanctum |
+| PUT | /api/v1/contacts/{contact} | Api\ContactController | update | 不要 |
+| DELETE | /api/v1/contacts/{contact} | Api\ContactController | destroy | 不要 |
 
 ---
 
-## **カテゴリAPI**
-
-| **Method** | **URI** | **Controller** | **Action** | **認証** |
-| --- | --- | --- | --- | --- |
-| GET | /api/v1/categories | Api\CategoryController | index | 不要 |
-
----
-
-## **タグAPI**
-
-| **Method** | **URI** | **Controller** | **Action** | **認証** |
-| --- | --- | --- | --- | --- |
-| GET | /api/v1/tags | Api\TagController | index | 不要 |
-
----
 
 # **Controller一覧**
 
 ## **Web**
 
 - ContactController
-- AdminContactController
+- CategoryController
 - TagController
 - ExportController
 
 ## **API**
 
 - Api\ContactController
-- Api\CategoryController
-- Api\TagController
 
 ---
 
