@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
 
-class ContactSearchTest extends TestCase
+class IndexContactRequestTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -22,7 +22,7 @@ class ContactSearchTest extends TestCase
 
     private function validate(array $data)
     {
-        $request = new IndexContactRequest();
+        $request = new IndexContactRequest;
 
         return Validator::make(
             $data,
@@ -119,7 +119,7 @@ class ContactSearchTest extends TestCase
         );
     }
 
-    public function test_日付がY_m_d形式であればバリデーションを通過する(): void
+    public function test_日付が_y_m_d形式であればバリデーションを通過する(): void
     {
         $validator = $this->validate([
             'date' => '2026-06-26',
