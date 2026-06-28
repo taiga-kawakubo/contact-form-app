@@ -4,6 +4,7 @@ namespace Tests\Feature\Validation;
 
 use App\Models\Category;
 use App\Models\Contact;
+use App\Models\Tag;
 use App\Models\User;
 use Database\Seeders\CategorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,6 +18,63 @@ class ContactAdminTest extends TestCase
     {
         parent::setUp();
         $this->seed(CategorySeeder::class);
+    }
+
+    public function test_認証済みユーザーは管理画面にアクセスできる(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        $response = $this->get(
+            route('admin.index')
+        );
+
+        $response->assertOk();
+
+        $response->assertViewIs('admin.index');
+    }
+
+    public function test_未認証ユーザーは管理画面にアクセスできない(): void
+    {
+        $response = $this->get(
+            route('admin.index')
+        );
+
+        $response->assertRedirect(
+            route('login')
+        );
+    }
+
+    public function test_管理画面でお問い合わせ一覧が表示される(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        $category = Category::firstOrFail();
+
+        Contact::factory()->create([
+            'first_name' => '山田',
+            'last_name' => '太郎',
+            'email' => 'yamada@example.com',
+            'tel' => '09012345678',
+            'category_id' => $category->id,
+            'detail' => 'お問い合わせ内容',
+        ]);
+
+        $response = $this->get(
+            route('admin.index')
+        );
+
+        $response->assertOk();
+
+        $response->assertViewIs('admin.index');
+
+        $response->assertSeeText('山田');
+        $response->assertSeeText('太郎');
+        $response->assertSeeText('yamada@example.com');
+        $response->assertSeeText($category->content);
     }
 
     public function test_キーワード検索ができる(): void
@@ -36,8 +94,11 @@ class ContactAdminTest extends TestCase
         ]);
 
         $response = $this->get(
-            '/admin?keyword=山田'
+            route('admin.index', [
+                'keyword' => '山田',
+            ])
         );
+        $response->assertOk();
         $response->assertSee('山田');
         $response->assertDontSee('佐藤');
     }
@@ -58,8 +119,11 @@ class ContactAdminTest extends TestCase
         ]);
 
         $response = $this->get(
-            '/admin?gender=1'
+            route('admin.index', [
+                'gender' => 1,
+            ])
         );
+        $response->assertOk();
         $response->assertSee('男性ユーザー');
         $response->assertDontSee('女性ユーザー');
     }
@@ -69,8 +133,8 @@ class ContactAdminTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $category1 = Category::find(1);
-        $category2 = Category::find(2);
+        $category1 = Category::findOrFail(1);
+        $category2 = Category::findOrFail(2);
         Contact::factory()->create([
             'first_name' => '対象',
             'category_id' => $category1->id,
@@ -81,9 +145,11 @@ class ContactAdminTest extends TestCase
         ]);
 
         $response = $this->get(
-            "/admin?category_id={$category1->id}"
+            route('admin.index', [
+                'category_id' => $category1->id,
+            ])
         );
-
+        $response->assertOk();
         $response->assertSee('対象');
         $response->assertDontSee('対象外');
     }
@@ -103,8 +169,11 @@ class ContactAdminTest extends TestCase
         ]);
 
         $response = $this->get(
-            '/admin?date=2026-06-24'
+            route('admin.index', [
+                'date' => '2026-06-24',
+            ])
         );
+        $response->assertOk();
         $response->assertSee('今日のデータ');
         $response->assertDontSee('昨日のデータ');
     }
@@ -113,22 +182,36 @@ class ContactAdminTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $category = Category::find(1);
+
+        $category = Category::firstOrFail();
+
         Contact::factory()->create([
-            'first_name' => '山田',
+            'first_name' => '山田男性',
+            'last_name' => '対象',
             'gender' => 1,
             'category_id' => $category->id,
+            'email' => 'male@example.com',
         ]);
+
         Contact::factory()->create([
-            'first_name' => '山田',
+            'first_name' => '山田女性',
+            'last_name' => '対象外',
             'gender' => 2,
             'category_id' => $category->id,
+            'email' => 'female@example.com',
         ]);
 
         $response = $this->get(
-            "/admin?keyword=山田&gender=1&category_id={$category->id}"
+            route('admin.index', [
+                'keyword' => '山田',
+                'gender' => 1,
+                'category_id' => $category->id,
+            ])
         );
-        $response->assertSee('山田');
+
+        $response->assertOk();
+        $response->assertSee('山田男性');
+        $response->assertDontSee('山田女性');
     }
 
     public function test_存在しない性別idはバリデーションエラーになる(): void
@@ -137,7 +220,9 @@ class ContactAdminTest extends TestCase
         $this->actingAs($user);
 
         $response = $this->get(
-            '/admin?gender=999'
+            route('admin.index', [
+                'gender' => 999,
+            ])
         );
 
         $response->assertSessionHasErrors([
@@ -152,20 +237,24 @@ class ContactAdminTest extends TestCase
 
         foreach ([1, 2, 3] as $gender) {
             $response = $this->get(
-                "/admin?gender={$gender}"
+                route('admin.index', [
+                    'gender' => $gender,
+                ])
             );
-        }
 
-        $response->assertSessionHasNoErrors();
+            $response->assertSessionHasNoErrors();
+        }
     }
 
-    public function test_存在しないカテゴリー_idはバリデーションエラーになる(): void
+    public function test_存在しないカテゴリーidはバリデーションエラーになる(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
 
         $response = $this->get(
-            '/admin?category_id=999'
+            route('admin.index', [
+                'category_id' => 999,
+            ])
         );
 
         $response->assertSessionHasErrors([
@@ -176,11 +265,13 @@ class ContactAdminTest extends TestCase
     public function test_存在するカテゴリー_idはバリデーションエラーにならない(): void
     {
         $user = User::factory()->create();
-        $category = Category::find(1);
+        $category = Category::findOrFail(1);
         $this->actingAs($user);
 
         $response = $this->get(
-            "/admin?category_id={$category->id}"
+            route('admin.index', [
+                'category_id' => $category->id,
+            ])
         );
 
         $response->assertSessionHasNoErrors();
@@ -192,7 +283,9 @@ class ContactAdminTest extends TestCase
         $this->actingAs($user);
 
         $response = $this->get(
-            '/admin?date=abc'
+            route('admin.index', [
+                'date' => 'abc',
+            ])
         );
 
         $response->assertSessionHasErrors([
@@ -206,7 +299,9 @@ class ContactAdminTest extends TestCase
         $this->actingAs($user);
 
         $response = $this->get(
-            '/admin?date=2026-06-24'
+            route('admin.index', [
+                'date' => '2026-06-24',
+            ])
         );
 
         $response->assertSessionHasNoErrors();
@@ -219,7 +314,9 @@ class ContactAdminTest extends TestCase
         $keyword = str_repeat('a', 256);
 
         $response = $this->get(
-            "/admin?keyword={$keyword}"
+            route('admin.index', [
+                'keyword' => $keyword,
+            ])
         );
 
         $response->assertSessionHasErrors([
@@ -235,7 +332,9 @@ class ContactAdminTest extends TestCase
         $keyword = str_repeat('a', 255);
 
         $response = $this->get(
-            "/admin?keyword={$keyword}"
+            route('admin.index', [
+                'keyword' => $keyword,
+            ])
         );
 
         $response->assertSessionHasNoErrors();
@@ -247,9 +346,122 @@ class ContactAdminTest extends TestCase
         $this->actingAs($user);
 
         $response = $this->get(
-            '/admin?keyword='
+            route('admin.index', [
+                'keyword' => '',
+            ])
         );
 
         $response->assertSessionHasNoErrors();
+    }
+
+    public function test_管理画面のお問い合わせ一覧は7件ごとにページネーションされる(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $category = Category::firstOrFail();
+
+        Contact::factory()
+            ->count(8)
+            ->sequence(function ($sequence) use ($category) {
+                return [
+                    'first_name' => '山田'.$sequence->index,
+                    'last_name' => '太郎',
+                    'email' => 'yamada'.$sequence->index.'@example.com',
+                    'category_id' => $category->id,
+                    'created_at' => now()->subMinutes($sequence->index),
+                ];
+            })
+            ->create();
+
+        $response = $this->get(route('admin.index'));
+
+        $response->assertOk();
+
+        $contacts = $response->viewData('contacts');
+
+        $this->assertCount(7, $contacts);
+        $this->assertSame(8, $contacts->total());
+        $this->assertSame(2, $contacts->lastPage());
+    }
+
+    public function test_お問い合わせ詳細ページでカテゴリとタグが表示できる(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $category = Category::firstOrFail();
+
+        $tag = Tag::create([
+            'name' => '重要タグ',
+        ]);
+
+        $contact = Contact::factory()->create([
+            'first_name' => '山田',
+            'last_name' => '太郎',
+            'gender' => 1,
+            'email' => 'yamada@example.com',
+            'tel' => '09012345678',
+            'address' => '東京都渋谷区',
+            'building' => 'テストビル',
+            'category_id' => $category->id,
+            'detail' => 'お問い合わせ内容',
+        ]);
+
+        $contact->tags()->attach($tag->id);
+
+        $response = $this->get(
+            route('admin.show', $contact)
+        );
+
+        $response->assertOk();
+
+        $response->assertViewIs('admin.show');
+
+        $response->assertSeeText('山田');
+        $response->assertSeeText('太郎');
+        $response->assertSeeText('yamada@example.com');
+        $response->assertSeeText('09012345678');
+        $response->assertSeeText('東京都渋谷区');
+        $response->assertSeeText('テストビル');
+        $response->assertSeeText('お問い合わせ内容');
+
+        $response->assertSeeText($category->content);
+        $response->assertSeeText('重要タグ');
+    }
+
+    public function test_指定したお問い合わせが削除され管理ページに遷移する(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $category = Category::firstOrFail();
+
+        $contact = Contact::factory()->create([
+            'first_name' => '山田',
+            'last_name' => '太郎',
+            'gender' => 1,
+            'email' => 'yamada@example.com',
+            'tel' => '09012345678',
+            'address' => '東京都渋谷区',
+            'building' => 'テストビル',
+            'category_id' => $category->id,
+            'detail' => 'お問い合わせ内容',
+        ]);
+
+        $response = $this->delete(
+            route('admin.delete', $contact)
+        );
+
+        $response->assertRedirect(
+            route('admin.index')
+        );
+
+        $this->assertDatabaseMissing(
+            'contacts',
+            [
+                'id' => $contact->id,
+            ]
+        );
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Validation;
+namespace Tests\Feature;
 
 use App\Models\Tag;
 use App\Models\User;
@@ -15,7 +15,7 @@ class TagTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $this->post(
+        $response = $this->post(
             route('tags.store'),
             [
                 'name' => 'テスト１',
@@ -27,6 +27,9 @@ class TagTest extends TestCase
             [
                 'name' => 'テスト１',
             ]
+        );
+        $response->assertRedirect(
+            route('admin.index')
         );
     }
 
@@ -98,6 +101,58 @@ class TagTest extends TestCase
         ]);
     }
 
+    public function test_未認証ユーザーはタグを作成できない(): void
+    {
+        $response = $this->post(
+            route('tags.store'),
+            [
+                'name' => 'テストタグ',
+            ]
+        );
+
+        $response->assertRedirect(
+            route('login')
+        );
+        $this->assertDatabaseMissing(
+            'tags',
+            [
+                'name' => 'テストタグ',
+            ]
+        );
+    }
+
+    public function test_認証済みユーザーはタグ編集画面を表示できる(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $tag = Tag::create([
+            'name' => 'テストタグ',
+        ]);
+
+        $response = $this->get(
+            route('tags.edit', $tag)
+        );
+
+        $response->assertOk();
+        $response->assertSee('value="テストタグ"', false);
+    }
+
+    public function test_未認証ユーザーはタグ編集画面にアクセスできない(): void
+    {
+        $tag = Tag::create([
+            'name' => 'テストタグ',
+        ]);
+
+        $response = $this->get(
+            route('tags.edit', $tag)
+        );
+
+        $response->assertRedirect(
+            route('login')
+        );
+    }
+
     public function test_タグの更新ができる(): void
     {
         $user = User::factory()->create();
@@ -105,7 +160,7 @@ class TagTest extends TestCase
         $tag = Tag::create([
             'name' => 'テスト１',
         ]);
-        $this->put(
+        $response = $this->put(
             route('tags.update', $tag),
             [
                 'name' => 'テスト２',
@@ -117,6 +172,9 @@ class TagTest extends TestCase
                 'id' => $tag->id,
                 'name' => 'テスト２',
             ]
+        );
+        $response->assertRedirect(
+            route('admin.index')
         );
     }
 
@@ -230,6 +288,88 @@ class TagTest extends TestCase
             [
                 'id' => $tag->id,
                 'name' => 'Laravel',
+            ]
+        );
+    }
+
+    public function test_未認証ユーザーはタグを更新できない(): void
+    {
+        $tag = Tag::create([
+            'name' => '更新前タグ',
+        ]);
+
+        $response = $this->put(
+            route('tags.update', $tag),
+            [
+                'name' => '更新後タグ',
+            ]
+        );
+
+        $response->assertRedirect(
+            route('login')
+        );
+
+        $this->assertDatabaseHas(
+            'tags',
+            [
+                'id' => $tag->id,
+                'name' => '更新前タグ',
+            ]
+        );
+
+        $this->assertDatabaseMissing(
+            'tags',
+            [
+                'id' => $tag->id,
+                'name' => '更新後タグ',
+            ]
+        );
+    }
+
+    public function test_タグの削除ができる(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $tag = Tag::create([
+            'name' => 'テストタグ',
+        ]);
+
+        $response = $this->delete(
+            route('tags.delete', $tag)
+        );
+
+        $response->assertRedirect(
+            route('admin.index')
+        );
+
+        $this->assertDatabaseMissing(
+            'tags',
+            [
+                'id' => $tag->id,
+            ]
+        );
+    }
+
+    public function test_未認証ユーザーはタグを削除できない(): void
+    {
+        $tag = Tag::create([
+            'name' => 'テストタグ',
+        ]);
+
+        $response = $this->delete(
+            route('tags.delete', $tag)
+        );
+
+        $response->assertRedirect(
+            route('login')
+        );
+
+        $this->assertDatabaseHas(
+            'tags',
+            [
+                'id' => $tag->id,
+                'name' => 'テストタグ',
             ]
         );
     }
