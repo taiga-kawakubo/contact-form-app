@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ContactRequest;
+use App\Http\Requests\ExportContactRequest;
 use App\Models\Category;
 use App\Models\Contact;
 use App\Models\Tag;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ContactController extends Controller
 {
@@ -76,5 +78,94 @@ class ContactController extends Controller
     public function thanks()
     {
         return view('contact.thanks');
+    }
+
+    /**
+     * エクスポート
+     */
+    public function export(ExportContactRequest $request): StreamedResponse
+    {
+        $validated = $request->validated();
+
+        $query = Contact::query()
+            ->with('category');
+
+        if (! empty($validated['keyword'])) {
+            $keyword = $validated['keyword'];
+
+            $query->where(function ($query) use ($keyword) {
+                $query->where('first_name', 'like', '%'.$keyword.'%')
+                    ->orWhere('last_name', 'like', '%'.$keyword.'%')
+                    ->orWhere('email', 'like', '%'.$keyword.'%')
+                    ->orWhereRaw(
+                        'CONCAT(first_name, last_name) LIKE ?',
+                        ['%'.$keyword.'%']
+                    )
+                    ->orWhereRaw(
+                        "CONCAT(first_name, ' ', last_name) LIKE ?",
+                        ['%'.$keyword.'%']
+                    );
+            });
+        }
+
+        if (isset($validated['gender']) && (int) $validated['gender'] !== 0) {
+            $query->where('gender', $validated['gender']);
+        }
+
+        if (! empty($validated['category_id'])) {
+            $query->where('category_id', $validated['category_id']);
+        }
+
+        if (! empty($validated['date'])) {
+            $query->whereDate('created_at', $validated['date']);
+        }
+
+        $contacts = $query
+            ->orderByDesc('created_at')
+            ->get();
+
+        $filename = 'contacts_'.now()->format('Ymd_His').'.csv';
+
+        return response()->streamDownload(function () use ($contacts) {
+            $stream = fopen('php://output', 'w');
+
+            if ($stream === false) {
+                return;
+            }
+
+            fwrite($stream, "\xEF\xBB\xBF");
+
+            fputcsv($stream, [
+                'ID',
+                '氏名',
+                '性別',
+                'メール',
+                '電話',
+                '住所',
+                '建物',
+                'カテゴリ',
+                '内容',
+                '作成日時',
+            ]);
+
+            foreach ($contacts as $contact) {
+                fputcsv($stream, [
+                    $contact->id,
+                    $contact->first_name.' '.$contact->last_name,
+                    $contact->gender_label,
+                    $contact->email,
+                    $contact->tel,
+                    $contact->address,
+                    $contact->building,
+                    $contact->category?->content,
+                    $contact->detail,
+                    $contact->created_at?->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($stream);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 }
