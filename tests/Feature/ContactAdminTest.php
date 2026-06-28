@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Validation;
+namespace Tests\Feature\Validation;
 
 use App\Models\Category;
 use App\Models\Contact;
@@ -9,7 +9,7 @@ use Database\Seeders\CategorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class ContactSearchTest extends TestCase
+class ContactAdminTest extends TestCase
 {
     use RefreshDatabase;
 

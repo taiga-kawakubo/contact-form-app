@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\AdminSearchRequest;
+use App\Http\Requests\ContactSearchRequest;
 use App\Models\Category;
 use App\Models\Contact;
 use App\Models\Tag;
@@ -12,7 +12,7 @@ class AdminController extends Controller
     /**
      * 管理画面一覧を表示＆検索
      */
-    public function index(AdminSearchRequest $request)
+    public function index(ContactSearchRequest $request)
     {
         $validated = $request->validated();
 

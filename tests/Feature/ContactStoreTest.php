@@ -1,0 +1,226 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Category;
+use App\Models\Contact;
+use App\Models\Tag;
+use Database\Seeders\CategorySeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class ContactStoreTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(CategorySeeder::class);
+    }
+
+    public function test_お問い合わせ入力画面が表示される(): void
+    {
+        $response = $this->get(
+            route('contact.index')
+        );
+
+        $response->assertOk();
+
+        $response->assertViewIs('contact.index');
+
+        $response->assertSee('お名前');
+        $response->assertSee('メールアドレス');
+        $response->assertSee('お問い合わせ内容');
+    }
+
+    public function test_お問い合わせフォーム確認ページが表示され入力内容が表示される(): void
+    {
+        $category = Category::firstOrFail();
+
+        $tag = Tag::create([
+            'name' => 'テストタグ',
+        ]);
+
+        $response = $this->post(
+            route('contact.confirm'),
+            [
+                'first_name' => '山田',
+                'last_name' => '太郎',
+                'gender' => 1,
+                'email' => 'yamada@example.com',
+                'tel' => '09012345678',
+                'address' => '東京都渋谷区',
+                'building' => 'テストビル',
+                'category_id' => $category->id,
+                'detail' => 'お問い合わせ内容',
+                'tag_ids' => [
+                    $tag->id,
+                ],
+            ]
+        );
+
+        $response->assertOk();
+
+        $response->assertViewIs('contact.confirm');
+
+        $response->assertSee('山田');
+        $response->assertSee('太郎');
+        $response->assertSee('yamada@example.com');
+        $response->assertSee('09012345678');
+        $response->assertSee('東京都渋谷区');
+        $response->assertSee('テストビル');
+        $response->assertSee($category->content);
+        $response->assertSee('お問い合わせ内容');
+        $response->assertSee('テストタグ');
+    }
+
+    public function test_問い合わせとタグが保存されてサンクスページに遷移する(): void
+    {
+        $category = Category::firstOrFail();
+
+        $tag1 = Tag::create([
+            'name' => 'テスト1',
+        ]);
+
+        $tag2 = Tag::create([
+            'name' => 'テスト2',
+        ]);
+
+        $response = $this->post(
+            route('contact.store'),
+            [
+                'first_name' => '山田',
+                'last_name' => '太郎',
+                'gender' => 1,
+                'email' => 'yamada@example.com',
+                'tel' => '09012345678',
+                'address' => '東京都渋谷区',
+                'building' => 'テストビル',
+                'category_id' => $category->id,
+                'detail' => 'お問い合わせ内容',
+                'tag_ids' => [
+                    $tag1->id,
+                    $tag2->id,
+                ],
+            ]
+        );
+
+        $response->assertRedirect(
+            route('contact.thanks')
+        );
+
+        $this->assertDatabaseHas(
+            'contacts',
+            [
+                'first_name' => '山田',
+                'last_name' => '太郎',
+                'gender' => 1,
+                'email' => 'yamada@example.com',
+                'tel' => '09012345678',
+                'address' => '東京都渋谷区',
+                'category_id' => $category->id,
+                'detail' => 'お問い合わせ内容',
+            ]
+        );
+
+        $contact = Contact::where('email', 'yamada@example.com')
+            ->firstOrFail();
+
+        $this->assertDatabaseHas(
+            'contact_tag',
+            [
+                'contact_id' => $contact->id,
+                'tag_id' => $tag1->id,
+            ]
+        );
+
+        $this->assertDatabaseHas(
+            'contact_tag',
+            [
+                'contact_id' => $contact->id,
+                'tag_id' => $tag2->id,
+            ]
+        );
+    }
+
+    public function test_お問い合わせ送信時にバリデーションエラーならリダイレクトされエラーが返る(): void
+    {
+        $category = Category::firstOrFail();
+
+        $tag = Tag::create([
+            'name' => 'テストタグ',
+        ]);
+
+        $response = $this
+            ->from(route('contact.index'))
+            ->post(
+                route('contact.store'),
+                [
+                    'first_name' => '山田',
+                    'last_name' => '太郎',
+                    'gender' => 1,
+                    'email' => 'yamada@example.com',
+                    'tel' => 'abcde',
+                    'address' => '東京都',
+                    'building' => 'テストビル',
+                    'category_id' => $category->id,
+                    'detail' => 'テスト',
+                    'tag_ids' => [
+                        $tag->id,
+                    ],
+                ]
+            );
+
+        $response->assertRedirect(
+            route('contact.index')
+        );
+
+        $response->assertSessionHasErrors([
+            'tel',
+        ]);
+
+        $response->assertSessionHasInput([
+            'first_name' => '山田',
+            'last_name' => '太郎',
+            'email' => 'yamada@example.com',
+        ]);
+    }
+
+    public function test_確認ページ表示時にバリデーションエラーならリダイレクトされエラーが返る(): void
+    {
+        $category = Category::firstOrFail();
+
+        $tag = Tag::create([
+            'name' => 'テストタグ',
+        ]);
+
+        $response = $this
+            ->from(route('contact.index'))
+            ->post(
+                route('contact.confirm'),
+                [
+                    'first_name' => '',
+                    'last_name' => '太郎',
+                    'gender' => 1,
+                    'email' => 'yamada@example.com',
+                    'tel' => '09012345678',
+                    'address' => '東京都渋谷区',
+                    'building' => 'テストビル',
+                    'category_id' => $category->id,
+                    'detail' => 'お問い合わせ内容',
+                    'tag_ids' => [
+                        $tag->id,
+                    ],
+                ]
+            );
+
+        $response->assertRedirect(
+            route('contact.index')
+        );
+
+        $response->assertSessionHasErrors([
+            'first_name',
+        ]);
+    }
+}
