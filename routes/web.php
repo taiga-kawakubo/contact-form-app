@@ -17,10 +17,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 // お問い合わせフォームの表示
-Route::get('/', [ContactController::class, 'index']);
+Route::get('/', [ContactController::class, 'index'])
+    ->name('contact.index');
 
 // お問い合わせフォーム内容の確認
-Route::post('/contacts/confirm', [ContactController::class, 'confirm']);
+Route::post('/contacts/confirm', [ContactController::class, 'confirm'])
+    ->name('contact.confirm');
 
 // お問い合わせフォームの作成
 Route::post('/contacts', [ContactController::class, 'store'])
@@ -42,7 +44,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/contacts/{contact}', [AdminController::class, 'show']);
 
     // お問い合わせの削除
-    Route::delete('/admin/contacts/{contact}', [AdminController::class, 'destroy']);
+    Route::delete('/admin/contacts/{contact}', [AdminController::class, 'destroy'])
+        ->name('admin.delete');
 
     // タグの新規作成
     Route::post('/admin/tags', [TagController::class, 'store'])

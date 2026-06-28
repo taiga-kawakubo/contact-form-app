@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class AdminSearchRequest extends FormRequest
+class ContactSearchRequest extends FormRequest
 {
     /**
      * リクエストの許可
