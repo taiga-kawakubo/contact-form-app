@@ -41,7 +41,8 @@ Route::middleware('auth')->group(function () {
         ->name('admin.index');
 
     // 詳細画面を表示する
-    Route::get('/admin/contacts/{contact}', [AdminController::class, 'show']);
+    Route::get('/admin/contacts/{contact}', [AdminController::class, 'show'])
+        ->name('admin.show');
 
     // お問い合わせの削除
     Route::delete('/admin/contacts/{contact}', [AdminController::class, 'destroy'])
@@ -52,14 +53,16 @@ Route::middleware('auth')->group(function () {
         ->name('tags.store');
 
     // タグの編集画面に遷移する
-    Route::get('/admin/tags/{tag}/edit', [TagController::class, 'edit']);
+    Route::get('/admin/tags/{tag}/edit', [TagController::class, 'edit'])
+        ->name('tags.edit');;
 
     // タグの更新
     Route::put('/admin/tags/{tag}', [TagController::class, 'update'])
         ->name('tags.update');
 
     // タグの削除
-    Route::delete('/admin/tags/{tag}', [TagController::class, 'destroy']);
+    Route::delete('/admin/tags/{tag}', [TagController::class, 'destroy'])
+        ->name('tags.delete');
 
     // CSVエクスポート
     Route::get('/contacts/export', [ContactController::class, 'export'])
