@@ -58,4 +58,8 @@ Route::middleware('auth')->group(function () {
     // タグの削除
     Route::delete('/admin/tags/{tag}', [TagController::class, 'destroy']);
 
+    // CSVエクスポート
+    Route::get('/contacts/export', [ContactController::class, 'export'])
+        ->name('contacts,export');
+
 });
