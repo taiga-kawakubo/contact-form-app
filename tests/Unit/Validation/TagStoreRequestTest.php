@@ -26,7 +26,7 @@ class TagStoreRequestTest extends TestCase
     private function validData(array $override = []): array
     {
         return array_merge([
-            'name' => 'Laravel',
+            'name' => 'テストタグ１',
         ], $override);
     }
 
@@ -44,6 +44,22 @@ class TagStoreRequestTest extends TestCase
         $validator = $this->makeValidator(
             $this->validData([
                 'name' => '',
+            ])
+        );
+
+        $this->assertTrue($validator->fails());
+
+        $this->assertArrayHasKey(
+            'name',
+            $validator->errors()->toArray()
+        );
+    }
+
+    public function test_タグ名は文字列でなければならない(): void
+    {
+        $validator = $this->makeValidator(
+            $this->validData([
+                'name' => ['テストタグ１'],
             ])
         );
 
@@ -85,12 +101,12 @@ class TagStoreRequestTest extends TestCase
     public function test_すでに存在するタグ名では新規登録できない(): void
     {
         Tag::create([
-            'name' => 'Laravel',
+            'name' => 'テストタグ１',
         ]);
 
         $validator = $this->makeValidator(
             $this->validData([
-                'name' => 'Laravel',
+                'name' => 'テストタグ１',
             ])
         );
 

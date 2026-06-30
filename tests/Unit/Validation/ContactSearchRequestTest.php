@@ -70,6 +70,21 @@ class ContactSearchRequestTest extends TestCase
         $this->assertFalse($validator->fails());
     }
 
+    public function test_キーワードは文字列でなければならない(): void
+    {
+        $validator = $this->makeValidator(
+            $this->validData([
+                'keyword' => ['山田'],
+            ])
+        );
+
+        $this->assertTrue($validator->fails());
+        $this->assertArrayHasKey(
+            'keyword',
+            $validator->errors()->toArray()
+        );
+    }
+
     public function test_キーワードは255文字以内ならバリデーションを通過する(): void
     {
         $validator = $this->makeValidator(
@@ -109,6 +124,21 @@ class ContactSearchRequestTest extends TestCase
         }
     }
 
+    public function test_性別は整数でなければならない(): void
+    {
+        $validator = $this->makeValidator(
+            $this->validData([
+                'gender' => ['1'],
+            ])
+        );
+
+        $this->assertTrue($validator->fails());
+        $this->assertArrayHasKey(
+            'gender',
+            $validator->errors()->toArray()
+        );
+    }
+
     public function test_不正な性別値はバリデーションエラーになる(): void
     {
         $validator = $this->makeValidator(
@@ -135,6 +165,21 @@ class ContactSearchRequestTest extends TestCase
         );
 
         $this->assertFalse($validator->fails());
+    }
+
+    public function test_カテゴリーidは整数でなければならない(): void
+    {
+        $validator = $this->makeValidator(
+            $this->validData([
+                'category_id' => [1],
+            ])
+        );
+
+        $this->assertTrue($validator->fails());
+        $this->assertArrayHasKey(
+            'category_id',
+            $validator->errors()->toArray()
+        );
     }
 
     public function test_存在しないカテゴリーidはバリデーションエラーになる(): void

@@ -1,15 +1,15 @@
 <?php
 
-namespace Tests\Unit;
+namespace Tests\Unit\Validation;
 
-use App\Http\Requests\ExportContactRequest;
+use App\Http\Requests\ContactExportRequest;
 use App\Models\Category;
 use Database\Seeders\CategorySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
 
-class ExportContactRequestTest extends TestCase
+class ContactExportRequestTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -22,7 +22,7 @@ class ExportContactRequestTest extends TestCase
 
     public function makeValidator(array $data)
     {
-        $request = new ExportContactRequest;
+        $request = new ContactExportRequest;
 
         return Validator::make(
             $data,
@@ -59,29 +59,59 @@ class ExportContactRequestTest extends TestCase
         $this->assertFalse($validator->fails());
     }
 
+    public function test_キーワードが256文字の場合はバリデーションエラーになる(): void
+    {
+        $validator = $this->makeValidator(
+            $this->validData([
+                'keyword' => str_repeat('a', 256),
+            ])
+        );
+
+        $this->assertTrue($validator->fails());
+        $this->assertArrayHasKey(
+            'keyword',
+            $validator->errors()->toArray()
+        );
+    }
+
     public function test_genderが0の場合はバリデーションを通過する(): void
     {
-        $validatator = $this->makeValidator(
+        $validator = $this->makeValidator(
             $this->validData([
                 'gender' => 0,
             ])
         );
 
-        $this->assertFalse($validatator->fails());
+        $this->assertFalse($validator->fails());
+    }
+
+    public function test_性別は整数でなければならない(): void
+    {
+        $validator = $this->makeValidator(
+            $this->validData([
+                'gender' => ['1'],
+            ])
+        );
+
+        $this->assertTrue($validator->fails());
+        $this->assertArrayHasKey(
+            'gender',
+            $validator->errors()->toArray()
+        );
     }
 
     public function test_不正な性別はバリデーションエラーになる(): void
     {
-        $validatator = $this->makeValidator(
+        $validator = $this->makeValidator(
             $this->validData([
                 'gender' => 999,
             ])
         );
 
-        $this->assertTrue($validatator->fails());
+        $this->assertTrue($validator->fails());
         $this->assertArrayHasKey(
             'gender',
-            $validatator->errors()->toArray()
+            $validator->errors()->toArray()
         );
     }
 
@@ -98,6 +128,21 @@ class ExportContactRequestTest extends TestCase
         $this->assertFalse($validator->fails());
     }
 
+    public function test_カテゴリidは整数でなければならない(): void
+    {
+        $validator = $this->makeValidator(
+            $this->validData([
+                'category_id' => [1],
+            ])
+        );
+
+        $this->assertTrue($validator->fails());
+        $this->assertArrayHasKey(
+            'category_id',
+            $validator->errors()->toArray()
+        );
+    }
+
     public function test_存在しないカテゴリidはバリデーションエラーになる(): void
     {
         $validator = $this->makeValidator(
@@ -109,6 +154,21 @@ class ExportContactRequestTest extends TestCase
         $this->assertTrue($validator->fails());
         $this->assertArrayHasKey(
             'category_id',
+            $validator->errors()->toArray()
+        );
+    }
+
+    public function test_日付形式でない入力はバリデーションエラーになる(): void
+    {
+        $validator = $this->makeValidator(
+            $this->validData([
+                'date' => 'abc',
+            ])
+        );
+
+        $this->assertTrue($validator->fails());
+        $this->assertArrayHasKey(
+            'date',
             $validator->errors()->toArray()
         );
     }

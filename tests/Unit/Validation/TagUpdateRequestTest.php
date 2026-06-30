@@ -35,19 +35,35 @@ class TagUpdateRequestTest extends TestCase
     private function validData(array $override = []): array
     {
         return array_merge([
-            'name' => 'Laravel',
+            'name' => 'テストタグ１',
         ], $override);
     }
 
     public function test_タグ名を変更できる(): void
     {
         $tag = Tag::create([
-            'name' => 'PHP',
+            'name' => 'テストタグ２',
         ]);
 
         $validator = $this->makeValidator(
             $this->validData([
-                'name' => 'Laravel',
+                'name' => 'テストタグ１',
+            ]),
+            $tag
+        );
+
+        $this->assertFalse($validator->fails());
+    }
+
+    public function test_更新時に自身の名前維持は可能である(): void
+    {
+        $tag = Tag::create([
+            'name' => 'テストタグ１',
+        ]);
+
+        $validator = $this->makeValidator(
+            $this->validData([
+                'name' => 'テストタグ１',
             ]),
             $tag
         );
@@ -58,7 +74,7 @@ class TagUpdateRequestTest extends TestCase
     public function test_タグ名が空の場合はバリデーションエラーになる(): void
     {
         $tag = Tag::create([
-            'name' => 'Laravel',
+            'name' => 'テストタグ１',
         ]);
 
         $validator = $this->makeValidator(
@@ -76,10 +92,31 @@ class TagUpdateRequestTest extends TestCase
         );
     }
 
+    public function test_更新時にタグ名は文字列でなければならない(): void
+    {
+        $tag = Tag::create([
+            'name' => 'テストタグ１',
+        ]);
+
+        $validator = $this->makeValidator(
+            $this->validData([
+                'name' => ['テストタグ１'],
+            ]),
+            $tag
+        );
+
+        $this->assertTrue($validator->fails());
+
+        $this->assertArrayHasKey(
+            'name',
+            $validator->errors()->toArray()
+        );
+    }
+
     public function test_更新時もタグ名は50文字まで入力できる(): void
     {
         $tag = Tag::create([
-            'name' => 'Laravel',
+            'name' => 'テストタグ１',
         ]);
 
         $validator = $this->makeValidator(
@@ -95,7 +132,7 @@ class TagUpdateRequestTest extends TestCase
     public function test_更新時にタグ名が50文字を超えるとバリデーションエラーになる(): void
     {
         $tag = Tag::create([
-            'name' => 'Laravel',
+            'name' => 'テストタグ１',
         ]);
 
         $validator = $this->makeValidator(
@@ -113,30 +150,14 @@ class TagUpdateRequestTest extends TestCase
         );
     }
 
-    public function test_更新時に自身の名前維持は可能である(): void
-    {
-        $tag = Tag::create([
-            'name' => 'Laravel',
-        ]);
-
-        $validator = $this->makeValidator(
-            $this->validData([
-                'name' => 'Laravel',
-            ]),
-            $tag
-        );
-
-        $this->assertFalse($validator->fails());
-    }
-
     public function test_他で既に使用されているタグ名への変更はバリデーションエラーになる(): void
     {
         $existingTag = Tag::create([
-            'name' => 'Laravel',
+            'name' => 'テストタグ１',
         ]);
 
         $targetTag = Tag::create([
-            'name' => 'PHP',
+            'name' => 'テストタグ２',
         ]);
 
         $validator = $this->makeValidator(
