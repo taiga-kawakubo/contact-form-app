@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Validation;
+namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Contact;
@@ -99,8 +99,8 @@ class ContactAdminTest extends TestCase
             ])
         );
         $response->assertOk();
-        $response->assertSee('山田');
-        $response->assertDontSee('佐藤');
+        $response->assertSeeText('山田');
+        $response->assertDontSeeText('佐藤');
     }
 
     public function test_性別検索ができる(): void
@@ -124,8 +124,8 @@ class ContactAdminTest extends TestCase
             ])
         );
         $response->assertOk();
-        $response->assertSee('男性ユーザー');
-        $response->assertDontSee('女性ユーザー');
+        $response->assertSeeText('男性ユーザー');
+        $response->assertDontSeeText('女性ユーザー');
     }
 
     public function test_カテゴリー検索ができる(): void
@@ -150,8 +150,8 @@ class ContactAdminTest extends TestCase
             ])
         );
         $response->assertOk();
-        $response->assertSee('対象');
-        $response->assertDontSee('対象外');
+        $response->assertSeeText('対象');
+        $response->assertDontSeeText('対象外');
     }
 
     public function test_日付検索ができる(): void
@@ -174,8 +174,8 @@ class ContactAdminTest extends TestCase
             ])
         );
         $response->assertOk();
-        $response->assertSee('今日のデータ');
-        $response->assertDontSee('昨日のデータ');
+        $response->assertSeeText('今日のデータ');
+        $response->assertDontSeeText('昨日のデータ');
     }
 
     public function test_複数の条件で検索ができる(): void
@@ -183,35 +183,91 @@ class ContactAdminTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $category = Category::firstOrFail();
+        $category1 = Category::findOrFail(1);
+        $category2 = Category::findOrFail(2);
 
+        // すべての条件に一致するデータ
         Contact::factory()->create([
             'first_name' => '山田男性',
             'last_name' => '対象',
             'gender' => 1,
-            'category_id' => $category->id,
+            'category_id' => $category1->id,
             'email' => 'male@example.com',
         ]);
 
+        // gender が一致しないデータ
         Contact::factory()->create([
             'first_name' => '山田女性',
             'last_name' => '対象外',
             'gender' => 2,
-            'category_id' => $category->id,
+            'category_id' => $category1->id,
             'email' => 'female@example.com',
+        ]);
+
+        // category_id が一致しないデータ
+        Contact::factory()->create([
+            'first_name' => '山田別カテゴリ',
+            'last_name' => '対象外',
+            'gender' => 1,
+            'category_id' => $category2->id,
+            'email' => 'other-category@example.com',
+        ]);
+
+        // keyword が一致しないデータ
+        Contact::factory()->create([
+            'first_name' => '佐藤男性',
+            'last_name' => '対象外',
+            'gender' => 1,
+            'category_id' => $category1->id,
+            'email' => 'sato@example.com',
         ]);
 
         $response = $this->get(
             route('admin.index', [
                 'keyword' => '山田',
                 'gender' => 1,
-                'category_id' => $category->id,
+                'category_id' => $category1->id,
             ])
         );
 
         $response->assertOk();
-        $response->assertSee('山田男性');
-        $response->assertDontSee('山田女性');
+
+        $response->assertSeeText('山田男性');
+
+        $response->assertDontSeeText('山田女性');
+        $response->assertDontSeeText('山田別カテゴリ');
+        $response->assertDontSeeText('佐藤男性');
+    }
+
+    public function test_管理画面のお問い合わせ一覧は7件ごとにページネーションされる(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $category = Category::firstOrFail();
+
+        Contact::factory()
+            ->count(8)
+            ->sequence(function ($sequence) use ($category) {
+                return [
+                    'first_name' => '山田'.$sequence->index,
+                    'last_name' => '太郎',
+                    'email' => 'yamada'.$sequence->index.'@example.com',
+                    'category_id' => $category->id,
+                    'created_at' => now()->subMinutes($sequence->index),
+                ];
+            })
+            ->create();
+
+        $response = $this->get(route('admin.index'));
+
+        $response->assertOk();
+
+        $contacts = $response->viewData('contacts');
+
+        $this->assertCount(7, $contacts);
+        $this->assertSame(8, $contacts->total());
+        $this->assertSame(2, $contacts->lastPage());
     }
 
     public function test_存在しない性別idはバリデーションエラーになる(): void
@@ -307,7 +363,7 @@ class ContactAdminTest extends TestCase
         $response->assertSessionHasNoErrors();
     }
 
-    public function test_キーワード検索で文字数が超えた場合はバリデーションエラーになる(): void
+    public function test_キーワード検索で256文字はバリデーションエラーになる(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -321,11 +377,10 @@ class ContactAdminTest extends TestCase
 
         $response->assertSessionHasErrors([
             'keyword',
-
         ]);
     }
 
-    public function test_キーワード検索で文字数が超えない場合はバリデーションエラーにならない(): void
+    public function test_キーワード検索で255文字はバリデーションエラーにならない(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -352,37 +407,6 @@ class ContactAdminTest extends TestCase
         );
 
         $response->assertSessionHasNoErrors();
-    }
-
-    public function test_管理画面のお問い合わせ一覧は7件ごとにページネーションされる(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-
-        $category = Category::firstOrFail();
-
-        Contact::factory()
-            ->count(8)
-            ->sequence(function ($sequence) use ($category) {
-                return [
-                    'first_name' => '山田'.$sequence->index,
-                    'last_name' => '太郎',
-                    'email' => 'yamada'.$sequence->index.'@example.com',
-                    'category_id' => $category->id,
-                    'created_at' => now()->subMinutes($sequence->index),
-                ];
-            })
-            ->create();
-
-        $response = $this->get(route('admin.index'));
-
-        $response->assertOk();
-
-        $contacts = $response->viewData('contacts');
-
-        $this->assertCount(7, $contacts);
-        $this->assertSame(8, $contacts->total());
-        $this->assertSame(2, $contacts->lastPage());
     }
 
     public function test_お問い合わせ詳細ページでカテゴリとタグが表示できる(): void

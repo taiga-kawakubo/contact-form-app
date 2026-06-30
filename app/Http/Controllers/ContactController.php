@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ContactExportRequest;
 use App\Http\Requests\ContactRequest;
-use App\Http\Requests\ExportContactRequest;
 use App\Models\Category;
 use App\Models\Contact;
 use App\Models\Tag;
@@ -83,7 +83,7 @@ class ContactController extends Controller
     /**
      * エクスポート
      */
-    public function export(ExportContactRequest $request): StreamedResponse
+    public function export(ContactExportRequest $request): StreamedResponse
     {
         $validated = $request->validated();
 

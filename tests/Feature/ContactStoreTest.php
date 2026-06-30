@@ -29,9 +29,9 @@ class ContactStoreTest extends TestCase
 
         $response->assertViewIs('contact.index');
 
-        $response->assertSee('お名前');
-        $response->assertSee('メールアドレス');
-        $response->assertSee('お問い合わせ内容');
+        $response->assertSeeText('お名前');
+        $response->assertSeeText('メールアドレス');
+        $response->assertSeeText('お問い合わせ内容');
     }
 
     public function test_お問い合わせフォーム確認ページが表示され入力内容が表示される(): void
@@ -64,15 +64,52 @@ class ContactStoreTest extends TestCase
 
         $response->assertViewIs('contact.confirm');
 
-        $response->assertSee('山田');
-        $response->assertSee('太郎');
-        $response->assertSee('yamada@example.com');
-        $response->assertSee('09012345678');
-        $response->assertSee('東京都渋谷区');
-        $response->assertSee('テストビル');
-        $response->assertSee($category->content);
-        $response->assertSee('お問い合わせ内容');
-        $response->assertSee('テストタグ');
+        $response->assertSeeText('山田');
+        $response->assertSeeText('太郎');
+        $response->assertSeeText('yamada@example.com');
+        $response->assertSeeText('09012345678');
+        $response->assertSeeText('東京都渋谷区');
+        $response->assertSeeText('テストビル');
+        $response->assertSeeText($category->content);
+        $response->assertSeeText('お問い合わせ内容');
+        $response->assertSeeText('テストタグ');
+    }
+
+    public function test_確認ページ表示時にバリデーションエラーならリダイレクトされエラーが返る(): void
+    {
+        $category = Category::firstOrFail();
+
+        $tag = Tag::create([
+            'name' => 'テストタグ',
+        ]);
+
+        $response = $this
+            ->from(route('contact.index'))
+            ->post(
+                route('contact.confirm'),
+                [
+                    'first_name' => '',
+                    'last_name' => '太郎',
+                    'gender' => 1,
+                    'email' => 'yamada@example.com',
+                    'tel' => '09012345678',
+                    'address' => '東京都渋谷区',
+                    'building' => 'テストビル',
+                    'category_id' => $category->id,
+                    'detail' => 'お問い合わせ内容',
+                    'tag_ids' => [
+                        $tag->id,
+                    ],
+                ]
+            );
+
+        $response->assertRedirect(
+            route('contact.index')
+        );
+
+        $response->assertSessionHasErrors([
+            'first_name',
+        ]);
     }
 
     public function test_問い合わせとタグが保存されてサンクスページに遷移する(): void
@@ -119,6 +156,7 @@ class ContactStoreTest extends TestCase
                 'email' => 'yamada@example.com',
                 'tel' => '09012345678',
                 'address' => '東京都渋谷区',
+                'building' => 'テストビル',
                 'category_id' => $category->id,
                 'detail' => 'お問い合わせ内容',
             ]
@@ -184,43 +222,6 @@ class ContactStoreTest extends TestCase
             'first_name' => '山田',
             'last_name' => '太郎',
             'email' => 'yamada@example.com',
-        ]);
-    }
-
-    public function test_確認ページ表示時にバリデーションエラーならリダイレクトされエラーが返る(): void
-    {
-        $category = Category::firstOrFail();
-
-        $tag = Tag::create([
-            'name' => 'テストタグ',
-        ]);
-
-        $response = $this
-            ->from(route('contact.index'))
-            ->post(
-                route('contact.confirm'),
-                [
-                    'first_name' => '',
-                    'last_name' => '太郎',
-                    'gender' => 1,
-                    'email' => 'yamada@example.com',
-                    'tel' => '09012345678',
-                    'address' => '東京都渋谷区',
-                    'building' => 'テストビル',
-                    'category_id' => $category->id,
-                    'detail' => 'お問い合わせ内容',
-                    'tag_ids' => [
-                        $tag->id,
-                    ],
-                ]
-            );
-
-        $response->assertRedirect(
-            route('contact.index')
-        );
-
-        $response->assertSessionHasErrors([
-            'first_name',
         ]);
     }
 }

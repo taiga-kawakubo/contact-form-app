@@ -70,19 +70,68 @@ class ContactStoreRequestTest extends TestCase
         $this->assertFalse($validator->fails());
     }
 
+    public function test_必須項目が空の場合はバリデーションエラーになる(): void
+    {
+        $requiredFields = [
+            'first_name',
+            'last_name',
+            'gender',
+            'email',
+            'tel',
+            'address',
+            'category_id',
+            'detail',
+        ];
+
+        foreach ($requiredFields as $field) {
+            $validator = $this->makeValidator(
+                $this->validData([
+                    $field => '',
+                ])
+            );
+
+            $this->assertTrue($validator->fails());
+
+            $this->assertArrayHasKey(
+                $field,
+                $validator->errors()->toArray()
+            );
+        }
+    }
+
     public function test_タグ入力が配列であればバリデーションを通過する(): void
     {
-        $tagIds = Tag::query()
-            ->pluck('id')
-            ->toArray();
+        $tag1 = Tag::create([
+            'name' => 'タグ1',
+        ]);
+
+        $tag2 = Tag::create([
+            'name' => 'タグ2',
+        ]);
 
         $validator = $this->makeValidator(
             $this->validData([
-                'tag_ids' => $tagIds,
+                'tag_ids' => [
+                    $tag1->id,
+                    $tag2->id,
+                ],
             ])
         );
 
         $this->assertFalse($validator->fails());
+    }
+
+    public function test_電話番号は10桁または11桁ならバリデーションを通過する(): void
+    {
+        foreach (['0312345678', '09012345678'] as $tel) {
+            $validator = $this->makeValidator(
+                $this->validData([
+                    'tel' => $tel,
+                ])
+            );
+
+            $this->assertFalse($validator->fails());
+        }
     }
 
     public function test_不正な電話番号形式はバリデーションエラーになる(): void
@@ -117,30 +166,18 @@ class ContactStoreRequestTest extends TestCase
         );
     }
 
-    public function test_必須項目が空の場合はバリデーションエラーになる(): void
+    public function test_電話番号は9桁または12桁の場合バリデーションエラーになる(): void
     {
-        $requiredFields = [
-            'first_name',
-            'last_name',
-            'gender',
-            'email',
-            'tel',
-            'address',
-            'category_id',
-            'detail',
-        ];
-
-        foreach ($requiredFields as $field) {
+        foreach (['123456789', '123456789012'] as $tel) {
             $validator = $this->makeValidator(
                 $this->validData([
-                    $field => '',
+                    'tel' => $tel,
                 ])
             );
 
             $this->assertTrue($validator->fails());
-
             $this->assertArrayHasKey(
-                $field,
+                'tel',
                 $validator->errors()->toArray()
             );
         }
