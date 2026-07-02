@@ -16,14 +16,21 @@
 
 # **Web Route**
 
-## **お問い合わせ機能**
+## お問い合わせ機能
 
-| **Method** | **URI** | **Controller** | **Action** | **Route Name** | **認証** |
-| --- | --- | --- | --- | --- | --- |
-| GET | / | ContactController | create | contacts.create | 不要 |
+認証：不要
+
+| Method | URI | Controller | Action | Route Name | 認証 |
+|---|---|---|---|---|---|
+| GET | / | ContactController | index | contacts.index | 不要 |
 | POST | /contacts/confirm | ContactController | confirm | contacts.confirm | 不要 |
+| POST | /contacts/back | ContactController | back | contacts.back | 不要 |
 | POST | /contacts | ContactController | store | contacts.store | 不要 |
 | GET | /thanks | ContactController | thanks | contacts.thanks | 不要 |
+
+### 補足
+
+`/contacts/back` は、確認画面から修正ボタンを押した際に使用する。
 
 ---
 
@@ -48,8 +55,8 @@ middleware: auth
 | **Method** | **URI** | **Controller** | **Action** | **Route Name** |
 | --- | --- | --- | --- | --- |
 | GET | /admin | AdminController | index | admin.index |
-| GET | /admin/contacts/{contact} | AdminController | show | admin.contacts.show |
-| DELETE | /admin/contacts/{contact} | AdminController | destroy | admin.contacts.destroy |
+| GET | /admin/contacts/{contact} | AdminController | show | admin.show |
+| DELETE | /admin/contacts/{contact} | AdminController | destroy | admin.delete |
 
 ---
 
@@ -59,10 +66,10 @@ middleware: auth
 
 | **Method** | **URI** | **Controller** | **Action** | **Route Name** |
 | --- | --- | --- | --- | --- |
-| POST | /admin/tags | TagController | store | admin.tags.store |
-| GET | /admin/tags/{tag}/edit | TagController | edit | admin.tags.edit |
-| PUT | /admin/tags/{tag} | TagController | update | admin.tags.update |
-| DELETE | /admin/tags/{tag} | TagController | destroy | admin.tags.destroy |
+| POST | /admin/tags | TagController | store | tags.store |
+| GET | /admin/tags/{tag}/edit | TagController | edit | tags.edit |
+| PUT | /admin/tags/{tag} | TagController | update | tags.update |
+| DELETE | /admin/tags/{tag} | TagController | destroy | tags.delete |
 
 ---
 
@@ -72,7 +79,7 @@ middleware: auth
 
 | **Method** | **URI** | **Controller** | **Action** | **Route Name** |
 | --- | --- | --- | --- | --- |
-| GET | /admin/export | ExportController | export | admin.export |
+| GET | /contacts/export | ContactController | export | contacts.export |
 
 ---
 
@@ -86,13 +93,14 @@ Prefix
 
 ## **お問い合わせAPI**
 
-| **Method** | **URI** | **Controller** | **Action** | **認証** |
-| --- | --- | --- | --- | --- |
-| GET | /api/v1/contacts | Api\ContactController | index | 不要 |
-| GET | /api/v1/contacts/{contact} | Api\ContactController | show | 不要 |
-| POST | /api/v1/contacts | Api\ContactController | store | 不要 |
-| PUT | /api/v1/contacts/{contact} | Api\ContactController | update | 不要 |
-| DELETE | /api/v1/contacts/{contact} | Api\ContactController | destroy | 不要 |
+
+| Method | URI | Controller | Action | Route Name | 認証 |
+|---|---|---|---|---|---|
+| GET | /api/v1/contacts | Api\V1\ContactController | index | api.v1.contacts.index | 不要 |
+| GET | /api/v1/contacts/{contact} | Api\V1\ContactController | show | api.v1.contacts.show | 不要 |
+| POST | /api/v1/contacts | Api\V1\ContactController | store | api.v1.contacts.store | 不要 |
+| PUT | /api/v1/contacts/{contact} | Api\V1\ContactController | update | api.v1.contacts.update | 不要 |
+| DELETE | /api/v1/contacts/{contact} | Api\V1\ContactController | destroy | api.v1.contacts.destroy | 不要 |
 
 ---
 
@@ -101,45 +109,36 @@ Prefix
 
 ## **Web**
 
+- AdminController
 - ContactController
-- CategoryController
 - TagController
-- ExportController
 
 ## **API**
 
-- Api\ContactController
+- Api\V1\ContactController
 
 ---
 
-# **Route Model Binding**
+# Route Model Binding
 
-## **Contact**
+本アプリでは、一部のルートで Laravel の Route Model Binding を使用する。
 
-```php
-/admin/contacts/{contact}
-
-/api/v1/contacts/{contact}
-```
-
-```php
-public function destroy(Contact $contact)
-```
-
-Laravelが自動でContactモデルを取得する。
+URLパラメータに指定された `{contact}` や `{tag}` をもとに、Laravel が対応するモデルを自動取得する。
 
 ---
 
-## **Tag**
+## Contact
 
-```php
-/admin/tags/{tag}/edit
+| URI | Controller | Action |
+|---|---|---|
+| /admin/contacts/{contact} | AdminController | show / destroy |
+| /api/v1/contacts/{contact} | Api\V1\ContactController | show / update / destroy |
 
-/admin/tags/{tag}
-```
+---
 
-```php
-public function update(Tag $tag)
-```
+## Tag
 
-Laravelが自動でTagモデルを取得する。
+| URI | Controller | Action |
+|---|---|---|
+| /admin/tags/{tag}/edit | TagController | edit |
+| /admin/tags/{tag} | TagController | update / destroy |

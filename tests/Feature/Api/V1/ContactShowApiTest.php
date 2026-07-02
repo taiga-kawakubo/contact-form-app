@@ -28,7 +28,7 @@ class ContactShowApiTest extends TestCase
             'email' => 'yamada@example.com',
         ]);
 
-        $response = $this->getJson('/api/v1/contacts/'.$contact->id);
+        $response = $this->getJson("/api/v1/contacts/{$contact->id}");
 
         $response->assertOk();
 
@@ -38,11 +38,11 @@ class ContactShowApiTest extends TestCase
         $response->assertJsonPath('data.email', 'yamada@example.com');
     }
 
-    public function test_詳細取得成功時に_jso_n構造が正しい(): void
+    public function test_詳細取得成功時のレスポンス構造が正しい(): void
     {
         $contact = Contact::factory()->create();
 
-        $response = $this->getJson('/api/v1/contacts/'.$contact->id);
+        $response = $this->getJson("/api/v1/contacts/{$contact->id}");
 
         $response->assertOk();
 
@@ -81,7 +81,7 @@ class ContactShowApiTest extends TestCase
             'category_id' => $category->id,
         ]);
 
-        $response = $this->getJson('/api/v1/contacts/'.$contact->id);
+        $response = $this->getJson("/api/v1/contacts/{$contact->id}");
 
         $response->assertOk();
 
@@ -101,7 +101,7 @@ class ContactShowApiTest extends TestCase
             $tag->id,
         ]);
 
-        $response = $this->getJson('/api/v1/contacts/'.$contact->id);
+        $response = $this->getJson("/api/v1/contacts/{$contact->id}");
 
         $response->assertOk();
 
@@ -111,14 +111,14 @@ class ContactShowApiTest extends TestCase
         $response->assertJsonPath('data.tags.0.name', $tag->name);
     }
 
-    public function test_存在しないお問い合わせ_i_dは404になる(): void
+    public function test_存在しないお問い合わせは404になる(): void
     {
         $response = $this->getJson('/api/v1/contacts/99999999');
 
         $response->assertNotFound();
 
-        $response->assertJsonStructure([
-            'message',
+        $response->assertJson([
+            'error' => 'お問い合わせが見つかりませんでした。',
         ]);
     }
 }

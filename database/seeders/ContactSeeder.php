@@ -17,10 +17,9 @@ class ContactSeeder extends Seeder
             ->count(20)
             ->create();
 
-        $contacts->each(function ($contact) {
-
+        $contacts->each(function (Contact $contact): void {
             $tagIds = Tag::inRandomOrder()
-                ->limit(rand(1, 3))
+                ->limit(random_int(1, 3))
                 ->pluck('id');
 
             $contact->tags()->attach($tagIds);

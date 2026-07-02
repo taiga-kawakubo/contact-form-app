@@ -39,8 +39,6 @@ REST APIを提供しており、お問い合わせデータの取得・登録・
 - お問い合わせ登録
 - お問い合わせ更新
 - お問い合わせ削除
-- カテゴリ一覧取得
-- タグ一覧取得
 
 ---
 
@@ -64,11 +62,9 @@ REST APIを提供しており、お問い合わせデータの取得・登録・
 | PHP | 8.2 |
 | Laravel | 10.x |
 | データベース | MySQL 8.0 |
-| Webサーバー | Nginx |
 | フロントエンド | Vite |
 | CSSフレームワーク | Tailwind CSS 3.4 |
 | 認証 | Laravel Fortify |
-| API認証 | Laravel Sanctum |
 | 開発環境 | Docker |
 | コンテナ管理 | Laravel Sail |
 | DB管理 | phpMyAdmin |
@@ -80,25 +76,13 @@ REST APIを提供しており、お問い合わせデータの取得・登録・
 
 ## お問い合わせAPI
 
-| Method | URI | 概要 |
-|---------|---------|---------|
-| GET | /api/v1/contacts | お問い合わせ一覧取得 |
-| GET | /api/v1/contacts/{contact} | お問い合わせ詳細取得 |
-| POST | /api/v1/contacts | お問い合わせ登録 |
-| PUT | /api/v1/contacts/{contact} | お問い合わせ更新 |
-| DELETE | /api/v1/contacts/{contact} | お問い合わせ削除 |
-
-## カテゴリAPI
-
-| Method | URI | 概要 |
-|---------|---------|---------|
-| GET | /api/v1/categories | カテゴリ一覧取得 |
-
-## タグAPI
-
-| Method | URI | 概要 |
-|---------|---------|---------|
-| GET | /api/v1/tags | タグ一覧取得 |
+| Method | URI | Controller | Action | Route Name | 認証 |
+|---|---|---|---|---|---|
+| GET | /api/v1/contacts | Api\V1\ContactController | index | api.v1.contacts.index | 不要 |
+| GET | /api/v1/contacts/{contact} | Api\V1\ContactController | show | api.v1.contacts.show | 不要 |
+| POST | /api/v1/contacts | Api\V1\ContactController | store | api.v1.contacts.store | 不要 |
+| PUT | /api/v1/contacts/{contact} | Api\V1\ContactController | update | api.v1.contacts.update | 不要 |
+| DELETE | /api/v1/contacts/{contact} | Api\V1\ContactController | destroy | api.v1.contacts.destroy | 不要 |
 
 ---
 
@@ -114,15 +98,10 @@ REST APIを提供しており、お問い合わせデータの取得・登録・
 ## リポジトリをクローン
 
 ```bash
-git clone <リポジトリURL>
+git clone https://github.com/taiga-kawakubo/contact-form-app.git
 cd contact-form-app
 ```
 
-## Composer依存関係をインストール
-
-```bash
-composer install
-```
 
 ## 環境変数ファイルを作成
 
@@ -130,9 +109,10 @@ composer install
 cp .env.example .env
 ```
 
+
 ## データベース設定
 
-`.env` を以下のように設定してください。
+`.env` のデータベース設定を以下のように設定します。
 
 ```env
 DB_CONNECTION=mysql
@@ -143,41 +123,82 @@ DB_USERNAME=sail
 DB_PASSWORD=password
 ```
 
+
+## Composer依存関係をインストール
+ローカル環境に Composer が入っていない場合でも、Dockerを使って依存関係をインストールできます。
+
+```bash
+docker run --rm \
+  -u "$(id -u):$(id -g)" \
+  -v "$(pwd):/var/www/html" \
+  -w /var/www/html \
+  laravelsail/php82-composer:latest \
+  composer install --ignore-platform-reqs
+```
+ローカル環境に Composer が入っている場合は、以下でも実行できます。
+
+```bash
+composer install
+```
+
+
 ## Sailコンテナ起動
 
 ```bash
 ./vendor/bin/sail up -d
 ```
-
-エイリアス設定済みの場合
+エイリアス設定済みの場合は、以下でも実行できます。
 
 ```bash
 sail up -d
 ```
 
+
 ## アプリケーションキー生成
+
+```bash
+./vendor/bin/sail artisan key:generate
+```
+エイリアス設定済みの場合は、以下でも実行できます。
 
 ```bash
 sail artisan key:generate
 ```
 
+
 ## マイグレーション・シーディング実行
 
 ```bash
-sail artisan migrate --seed
+./vendor/bin/sail artisan migrate:fresh --seed
 ```
+エイリアス設定済みの場合は、以下でも実行できます。
+```bash
+sail artisan migrate:fresh --seed
+```
+
 
 ## フロントエンド依存関係インストール
 
 ```bash
+./vendor/bin/sail npm install
+```
+エイリアス設定済みの場合は、以下でも実行できます。
+```bash
 sail npm install
 ```
 
-## Vite起動
 
+## Vite起動
+```bash
+./vendor/bin/sail npm run dev
+```
+
+エイリアス設定済みの場合は、以下でも実行できます。
 ```bash
 sail npm run dev
 ```
+※ このコマンドは実行中のままにしておく必要があります。
+そのため、以降のコマンド操作を行う場合は、別のターミナルタブを開いて実行してください。
 
 ---
 
@@ -197,6 +218,86 @@ http://localhost:8080
 
 ---
 
+# 初期管理者ログイン情報
+
+シーディング実行後、以下のアカウントで管理画面にログインできます。
+
+| 項目 | 内容 |
+|------|------|
+| メールアドレス | test@example.com |
+| パスワード | password |
+
+---
+
+# テスト実行方法
+
+LaravelのFeatureテスト・Unitテストは以下のコマンドで実行できます。
+
+```bash
+sail artisan test
+```
+
+Sailのエイリアスを設定していない場合は、以下のコマンドを使用してください。
+
+```bash
+./vendor/bin/sail artisan test
+```
+
+---
+
+# テストカバレッジ確認方法（任意）
+
+テストカバレッジは以下のコマンドで確認できます。
+
+```bash
+sail artisan test --coverage
+```
+
+Sailのエイリアスを設定していない場合は、以下のコマンドを使用してください。
+
+```bash
+./vendor/bin/sail artisan test --coverage
+```
+
+本アプリケーションでは、Controller・FormRequest・Resource・Modelを中心にテストを作成しています。
+
+主なテスト対象は以下です。
+
+- お問い合わせ登録
+- お問い合わせ確認
+- 管理画面アクセス制御
+- お問い合わせ検索
+- お問い合わせ詳細表示
+- お問い合わせ削除
+- CSVエクスポート
+- タグ作成・更新・削除
+- 認証・ログアウト
+- APIによる一覧取得・詳細取得・登録・更新・削除
+
+現在のテストカバレッジは以下です。
+
+```text
+Total: 88.7%
+```
+
+---
+
+# コード整形確認
+
+Laravel Pintによるコード整形は以下のコマンドで実行できます。
+
+```bash
+sail bin pint
+```
+
+整形が必要なファイルがないか確認する場合は、以下を実行します。
+
+```bash
+sail bin pint --test
+```
+
+---
+
 # ディレクトリ構成
 
 ```text
@@ -210,33 +311,6 @@ database/
 resources/
 routes/
 ```
-
----
-
-# Pull Requestテンプレート
-
-
-## 概要
-
-Issue #◯ を実装しました。
-
-## 実装内容
-
--
--
--
-
-## 確認項目
-
-- ローカル動作確認済み
-- PHPUnit実行済み
-- コード整形済み
-- 不要なコメント削除済み
-
-## 関連Issue
-
-Closes #◯
-
 
 ---
 

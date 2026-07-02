@@ -8,7 +8,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class CategoryResource extends JsonResource
 {
     /**
-     * Transform the resource into an array.
+     * カテゴリー情報をAPIレスポンス用の配列に変換する
      *
      * @return array<string, mixed>
      */

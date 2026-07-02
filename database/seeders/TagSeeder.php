@@ -12,20 +12,18 @@ class TagSeeder extends Seeder
      */
     public function run(): void
     {
-        Tag::create([
-            'name' => '質問',
-        ]);
-        Tag::create([
-            'name' => '要望',
-        ]);
-        Tag::create([
-            'name' => '不具合報告',
-        ]);
-        Tag::create([
-            'name' => 'ご意見',
-        ]);
-        Tag::create([
-            'name' => 'その他',
-        ]);
+        $tags = [
+            '質問',
+            '要望',
+            '不具合報告',
+            'ご意見',
+            'その他',
+        ];
+
+        foreach ($tags as $tag) {
+            Tag::create([
+                'name' => $tag,
+            ]);
+        }
     }
 }

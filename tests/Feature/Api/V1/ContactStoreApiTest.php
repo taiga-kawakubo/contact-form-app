@@ -60,7 +60,7 @@ class ContactStoreApiTest extends TestCase
         ]);
     }
 
-    public function test_登録成功時に_jso_n構造が正しい(): void
+    public function test_登録成功時のレスポンス構造が正しい(): void
     {
         $response = $this->postJson('/api/v1/contacts', $this->validData());
 
@@ -93,7 +93,7 @@ class ContactStoreApiTest extends TestCase
         ]);
     }
 
-    public function test_登録成功時にカテゴリ情報が_jso_nに含まれる(): void
+    public function test_登録成功時にカテゴリ情報がレスポンスに含まれる(): void
     {
         $data = $this->validData();
 
@@ -283,7 +283,7 @@ class ContactStoreApiTest extends TestCase
         ]);
     }
 
-    public function test_存在しないgenderはバリデーションエラーになる(): void
+    public function test_存在しないgenderはバリデーションエラーとなりメッセージが返る(): void
     {
         $data = $this->validData([
             'gender' => 999,
@@ -296,9 +296,14 @@ class ContactStoreApiTest extends TestCase
         $response->assertJsonValidationErrors([
             'gender',
         ]);
+
+        $this->assertSame(
+            '性別の値が不正です',
+            $response->json('errors.gender.0')
+        );
     }
 
-    public function test_存在しないcategory_idはバリデーションエラーになる(): void
+    public function test_存在しないcategory_idはバリデーションエラーとなりメッセージが返る(): void
     {
         $data = $this->validData([
             'category_id' => 999999,
@@ -311,9 +316,13 @@ class ContactStoreApiTest extends TestCase
         $response->assertJsonValidationErrors([
             'category_id',
         ]);
+        $this->assertSame(
+            '選択されたカテゴリーが存在しません',
+            $response->json('errors.category_id.0')
+        );
     }
 
-    public function test_存在しないtag_idsはバリデーションエラーになる(): void
+    public function test_存在しないtag_idsはバリデーションエラーとなりメッセージが返る(): void
     {
         $data = $this->validData([
             'tag_ids' => [999999],
@@ -326,6 +335,10 @@ class ContactStoreApiTest extends TestCase
         $response->assertJsonValidationErrors([
             'tag_ids.0',
         ]);
+        $this->assertSame(
+            '選択されたタグが存在しません',
+            $response->json('errors')['tag_ids.0'][0]
+        );
     }
 
     public function test_tag_idsが配列でない場合はバリデーションエラーになる(): void
@@ -358,7 +371,7 @@ class ContactStoreApiTest extends TestCase
         ]);
     }
 
-    public function test_telが数字以外の場合はバリデーションエラーになる(): void
+    public function test_telが不正な場合はバリデーションエラーとなりメッセージが返る(): void
     {
         $data = $this->validData([
             'tel' => '090-aaaa-bbbb',
@@ -371,6 +384,11 @@ class ContactStoreApiTest extends TestCase
         $response->assertJsonValidationErrors([
             'tel',
         ]);
+
+        $this->assertSame(
+            '電話番号はハイフンなしの10〜11桁で入力してください',
+            $response->json('errors.tel.0')
+        );
     }
 
     public function test_first_nameは255文字まで登録できる(): void
@@ -455,5 +473,52 @@ class ContactStoreApiTest extends TestCase
         $response->assertJsonValidationErrors([
             'detail',
         ]);
+    }
+
+    public function test_必須項目が未入力の場合は指定された日本語メッセージが返る(): void
+    {
+        $response = $this->postJson('/api/v1/contacts', []);
+
+        $response->assertStatus(422);
+
+        $this->assertSame(
+            '姓を入力してください',
+            $response->json('errors.first_name.0')
+        );
+
+        $this->assertSame(
+            '名を入力してください',
+            $response->json('errors.last_name.0')
+        );
+
+        $this->assertSame(
+            '性別を選択してください',
+            $response->json('errors.gender.0')
+        );
+
+        $this->assertSame(
+            'メールアドレスを入力してください',
+            $response->json('errors.email.0')
+        );
+
+        $this->assertSame(
+            '電話番号を入力してください',
+            $response->json('errors.tel.0')
+        );
+
+        $this->assertSame(
+            '住所を入力してください',
+            $response->json('errors.address.0')
+        );
+
+        $this->assertSame(
+            'お問い合わせの種類を選択してください',
+            $response->json('errors.category_id.0')
+        );
+
+        $this->assertSame(
+            'お問い合わせ内容を入力してください',
+            $response->json('errors.detail.0')
+        );
     }
 }

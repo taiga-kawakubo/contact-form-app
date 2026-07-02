@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ContactSearchRequest;
+use App\Http\Requests\IndexContactRequest;
 use App\Models\Category;
 use App\Models\Contact;
 use App\Models\Tag;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class AdminController extends Controller
 {
     /**
-     * 管理画面一覧を表示＆検索
+     * 管理画面一覧を表示・検索する
      */
-    public function index(ContactSearchRequest $request)
+    public function index(IndexContactRequest $request): View
     {
         $validated = $request->validated();
 
@@ -52,7 +54,9 @@ class AdminController extends Controller
             $query->where('category_id', $validated['category_id']);
         }
 
-        $contacts = $query->paginate(7);
+        // ページネーション
+        $contacts = $query
+            ->paginate(7);
 
         $categories = Category::orderBy('id')->get();
         $tags = Tag::orderBy('id')->get();
@@ -64,22 +68,20 @@ class AdminController extends Controller
     }
 
     /**
-     * お問い合わせ詳細の表示
+     * お問い合わせ詳細を表示する
      */
-    public function show(string $id)
+    public function show(Contact $contact): View
     {
-        $contact = Contact::with('category', 'tags')->findOrFail($id);
+        $contact->load('category', 'tags');
 
         return view('admin.show', compact('contact'));
     }
 
     /**
-     * お問い合わせの削除
+     * お問い合わせを削除する
      */
-    public function destroy(string $id)
+    public function destroy(Contact $contact): RedirectResponse
     {
-        $contact = Contact::findOrFail($id);
-
         $contact->delete();
 
         return redirect()->route('admin.index');

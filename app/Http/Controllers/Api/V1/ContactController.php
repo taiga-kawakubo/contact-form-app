@@ -8,6 +8,7 @@ use App\Http\Requests\Api\V1\StoreContactRequest;
 use App\Http\Requests\Api\V1\UpdateContactRequest;
 use App\Http\Resources\ContactResource;
 use App\Models\Contact;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ContactController extends Controller
@@ -19,7 +20,7 @@ class ContactController extends Controller
     {
         $query = Contact::with(['category', 'tags']);
 
-        // 姓/名/メールの部分一致検索
+        // 姓・名・メールの検索
         if ($request->filled('keyword')) {
             $keyword = $request->input('keyword');
             $query->where(function ($query) use ($keyword) {
@@ -36,21 +37,21 @@ class ContactController extends Controller
                     );
             });
         }
-        // 性別フィルタ（1:男性, 2:女性, 3:その他）
+        // 性別フィルタ
         if ($request->filled('gender')) {
             $query->where('gender', $request->gender);
         }
-        // 作成日フィルタ（YYYY-MM-DD）
+        // 作成日フィルタ
         if ($request->filled('date')) {
             $query->whereDate('created_at', $request->date);
         }
 
-        // カテゴリID絞り込み
+        // カテゴリIDフィルタ
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
 
-        // 1ページあたりの件数（デフォルト: 20）
+        // ページネーション
         $perPage = $request->input('per_page', 20);
         $contacts = $query->latest()->paginate($perPage)->withQueryString();
 
@@ -60,13 +61,13 @@ class ContactController extends Controller
     /**
      * お問い合わせ登録
      */
-    public function store(StoreContactRequest $request)
+    public function store(StoreContactRequest $request): JsonResponse
     {
-        $valideted = $request->validated();
-        $tagIds = $valideted['tag_ids'] ?? [];
-        unset($valideted['tag_ids']);
+        $validated = $request->validated();
+        $tagIds = $validated['tag_ids'] ?? [];
+        unset($validated['tag_ids']);
 
-        $contact = Contact::create($valideted);
+        $contact = Contact::create($validated);
 
         if (! empty($tagIds)) {
             $contact->tags()->attach($tagIds);
@@ -105,7 +106,7 @@ class ContactController extends Controller
     /**
      * お問い合わせ削除
      */
-    public function destroy(Contact $contact)
+    public function destroy(Contact $contact): JsonResponse
     {
         $contact->delete();
 
