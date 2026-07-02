@@ -18,10 +18,11 @@ class Tag extends Model
     ];
 
     /**
-     * このタグに属するcontactを取得
+     * このタグに紐づくお問い合わせ一覧を取得する
      */
     public function contacts(): BelongsToMany
     {
-        return $this->belongsToMany(Contact::class);
+        return $this->belongsToMany(Contact::class)
+            ->withTimestamps();
     }
 }

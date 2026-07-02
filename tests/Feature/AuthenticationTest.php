@@ -11,6 +11,9 @@ class AuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * 検証に必要なユーザーを作成する
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -109,7 +112,7 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_メールアドレスがメール形式でない場合ログインに失敗する(): void
+    public function test_不正なメールアドレスではログインに失敗する(): void
     {
         $response = $this
             ->from(route('login'))
@@ -161,5 +164,22 @@ class AuthenticationTest extends TestCase
 
         $response->assertRedirect(route('login'));
         $this->assertGuest();
+    }
+
+    public function test_ログイン済みユーザーがログイン画面へアクセスすると管理画面へリダイレクトされる(): void
+    {
+        $user = User::where('email', 'test@example.com')->firstOrFail();
+
+        $response = $this->actingAs($user)
+            ->get(route('login'));
+
+        $response->assertRedirect(route('admin.index'));
+    }
+
+    public function test_未ログインユーザーは管理画面へアクセスできない(): void
+    {
+        $response = $this->get(route('admin.index'));
+
+        $response->assertRedirect(route('login'));
     }
 }

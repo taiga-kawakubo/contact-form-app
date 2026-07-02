@@ -13,10 +13,10 @@ class CategoryTest extends TestCase
 
     public function test_カテゴリーが複数のお問い合わせを持つ(): void
     {
-        // テスト用のCategoryとContact1・Contact2を作成
         $category = Category::create([
             'content' => '商品のお届けについて',
         ]);
+
         $contact1 = Contact::create([
             'category_id' => $category->id,
             'first_name' => '太郎',
@@ -28,6 +28,7 @@ class CategoryTest extends TestCase
             'building' => null,
             'detail' => '商品についての問い合わせ',
         ]);
+
         $contact2 = Contact::create([
             'category_id' => $category->id,
             'first_name' => '花子',
@@ -40,10 +41,16 @@ class CategoryTest extends TestCase
             'detail' => '配送についての問い合わせ',
         ]);
 
-        // Categoryの取得
         $contacts = $category->contacts;
 
-        // Categoryから2件のContactを取得できることを確認
         $this->assertCount(2, $contacts);
+
+        $this->assertEqualsCanonicalizing(
+            [
+                $contact1->id,
+                $contact2->id,
+            ],
+            $contacts->pluck('id')->all()
+        );
     }
 }

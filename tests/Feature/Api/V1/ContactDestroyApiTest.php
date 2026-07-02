@@ -56,10 +56,14 @@ class ContactDestroyApiTest extends TestCase
         ]);
     }
 
-    public function test_存在しないお問い合わせ_i_dは削除できない(): void
+    public function test_存在しないお問い合わせidは削除できない(): void
     {
         $response = $this->deleteJson('/api/v1/contacts/99999999');
 
         $response->assertNotFound();
+
+        $response->assertJson([
+            'error' => 'お問い合わせが見つかりませんでした。',
+        ]);
     }
 }

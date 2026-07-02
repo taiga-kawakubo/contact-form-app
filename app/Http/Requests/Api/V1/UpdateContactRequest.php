@@ -53,7 +53,7 @@ class UpdateContactRequest extends FormRequest
             'tel.regex' => '電話番号はハイフンなしの10〜11桁で入力してください',
             'gender.in' => '性別の値が不正です',
             'category_id.exists' => '選択されたカテゴリーが存在しません',
-            'tag_ids.*.exists' => '選択されたタグが存在しません'
+            'tag_ids.*.exists' => '選択されたタグが存在しません',
         ];
     }
 }

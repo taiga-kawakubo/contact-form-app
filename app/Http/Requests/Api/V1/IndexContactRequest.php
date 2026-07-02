@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 class IndexContactRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * リクエストの認可
      */
     public function authorize(): bool
     {

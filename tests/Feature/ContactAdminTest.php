@@ -14,6 +14,9 @@ class ContactAdminTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * 検証に必要なカテゴリーを作成する
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -454,6 +457,21 @@ class ContactAdminTest extends TestCase
         $response->assertSeeText('重要タグ');
     }
 
+    public function test_未認証ユーザーはお問い合わせ詳細画面にアクセスできない(): void
+    {
+        $category = Category::firstOrFail();
+
+        $contact = Contact::factory()->create([
+            'category_id' => $category->id,
+        ]);
+
+        $response = $this->get(
+            route('admin.show', $contact)
+        );
+
+        $response->assertRedirect(route('login'));
+    }
+
     public function test_指定したお問い合わせが削除され管理ページに遷移する(): void
     {
         $user = User::factory()->create();
@@ -487,5 +505,24 @@ class ContactAdminTest extends TestCase
                 'id' => $contact->id,
             ]
         );
+    }
+
+    public function test_未認証ユーザーはお問い合わせを削除できない(): void
+    {
+        $category = Category::firstOrFail();
+
+        $contact = Contact::factory()->create([
+            'category_id' => $category->id,
+        ]);
+
+        $response = $this->delete(
+            route('admin.delete', $contact)
+        );
+
+        $response->assertRedirect(route('login'));
+
+        $this->assertDatabaseHas('contacts', [
+            'id' => $contact->id,
+        ]);
     }
 }

@@ -14,10 +14,10 @@ class ContactTest extends TestCase
 
     public function test_お問い合わせが一つのカテゴリーを持つ(): void
     {
-        // テスト用のCategoryとContact1・Contact2を作成
         $category = Category::create([
             'content' => '商品のお届けについて',
         ]);
+
         $contact = Contact::create([
             'category_id' => $category->id,
             'first_name' => '太郎',
@@ -30,16 +30,13 @@ class ContactTest extends TestCase
             'detail' => '商品についての問い合わせ',
         ]);
 
-        // Contactから関連するCategoryを取得
         $contactCategory = $contact->category;
 
-        // Contactが正しいCategoryに属していることを確認
         $this->assertEquals(
             $category->id,
             $contactCategory->id
         );
-        // Category名が正しく取得できることを確認
-        $this->assertEquals(
+        $this->assertSame(
             '商品のお届けについて',
             $contactCategory->content
         );
@@ -47,7 +44,6 @@ class ContactTest extends TestCase
 
     public function test_お問い合わせはタグと多対多のリレーションを同期できる(): void
     {
-        // テスト用のCategory・Contact・Tagを作成
         $category = Category::create([
             'content' => '商品のお届けについて',
         ]);
@@ -67,20 +63,26 @@ class ContactTest extends TestCase
         $tag1 = Tag::create([
             'name' => '重要',
         ]);
+
         $tag2 = Tag::create([
             'name' => '至急',
         ]);
 
-        // Contactに2つのTagを同期する
         $contact->tags()->sync([
             $tag1->id,
             $tag2->id,
         ]);
 
-        // Contactに関連するTagが2件取得できることを確認
-        $this->assertCount(
-            2,
-            $contact->tags
+        $contact->load('tags');
+
+        $this->assertCount(2, $contact->tags);
+
+        $this->assertEqualsCanonicalizing(
+            [
+                $tag1->id,
+                $tag2->id,
+            ],
+            $contact->tags->pluck('id')->all()
         );
     }
 }

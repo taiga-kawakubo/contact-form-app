@@ -35,11 +35,12 @@ class Contact extends Model
     }
 
     /**
-     * この問い合わせが属するtagを取得
+     * お問い合わせに紐づくタグ一覧を取得する
      */
     public function tags(): BelongsToMany
     {
-        return $this->belongsToMany(Tag::class);
+        return $this->belongsToMany(Tag::class)
+            ->withTimestamps();
     }
 
     /**
@@ -50,7 +51,7 @@ class Contact extends Model
     ];
 
     /**
-     * ジェンダーのラベルを取得
+     * 性別の表示ラベルを取得する
      */
     public function getGenderLabelAttribute(): string
     {

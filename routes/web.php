@@ -7,40 +7,43 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| お問い合わせ画面
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
 // お問い合わせフォームの表示
 Route::get('/', [ContactController::class, 'index'])
-    ->name('contact.index');
+    ->name('contacts.index');
 
 // お問い合わせフォーム内容の確認
 Route::post('/contacts/confirm', [ContactController::class, 'confirm'])
-    ->name('contact.confirm');
+    ->name('contacts.confirm');
+
+// お問い合わせフォーム内容の修正
+Route::post('/contacts/back', [ContactController::class, 'back'])
+    ->name('contacts.back');
 
 // お問い合わせフォームの作成
 Route::post('/contacts', [ContactController::class, 'store'])
-    ->name('contact.store');
+    ->name('contacts.store');
 
 // お問い合わせ完了画面
-Route::get('/contacts/thanks', [ContactController::class, 'thanks'])
-    ->name('contact.thanks');
+Route::get('/thanks', [ContactController::class, 'thanks'])
+    ->name('contacts.thanks');
 
-// 管理画面
+/*
+|--------------------------------------------------------------------------
+| お問い合わせ管理画面
+|--------------------------------------------------------------------------
+*/
 
 Route::middleware('auth')->group(function () {
 
-    // 管理画面を表示する
+    // 管理画面の表示
     Route::get('/admin', [AdminController::class, 'index'])
         ->name('admin.index');
 
-    // 詳細画面を表示する
+    // お問い合わせ詳細画面の表示
     Route::get('/admin/contacts/{contact}', [AdminController::class, 'show'])
         ->name('admin.show');
 
@@ -52,9 +55,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/tags', [TagController::class, 'store'])
         ->name('tags.store');
 
-    // タグの編集画面に遷移する
+    // タグの編集画面に遷移
     Route::get('/admin/tags/{tag}/edit', [TagController::class, 'edit'])
-        ->name('tags.edit');;
+        ->name('tags.edit');
 
     // タグの更新
     Route::put('/admin/tags/{tag}', [TagController::class, 'update'])
@@ -66,6 +69,6 @@ Route::middleware('auth')->group(function () {
 
     // CSVエクスポート
     Route::get('/contacts/export', [ContactController::class, 'export'])
-        ->name('contacts,export');
+        ->name('contacts.export');
 
 });

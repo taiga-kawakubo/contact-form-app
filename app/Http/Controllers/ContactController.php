@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ContactExportRequest;
-use App\Http\Requests\ContactRequest;
+use App\Http\Requests\ExportContactRequest;
+use App\Http\Requests\StoreContactRequest;
 use App\Models\Category;
 use App\Models\Contact;
 use App\Models\Tag;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ContactController extends Controller
@@ -14,7 +17,7 @@ class ContactController extends Controller
     /**
      * 問い合わせフォームの表示
      */
-    public function index()
+    public function index(): View
     {
         $categories = Category::orderBy('id')->get();
 
@@ -26,11 +29,11 @@ class ContactController extends Controller
     /**
      * 問い合わせ内容の確認
      */
-    public function confirm(ContactRequest $request)
+    public function confirm(StoreContactRequest $request): View
     {
         $validated = $request->validated();
 
-        $category = Category::find($validated['category_id']);
+        $category = Category::findOrFail($validated['category_id']);
 
         $tags = collect();
         if (! empty($validated['tag_ids'])) {
@@ -46,9 +49,19 @@ class ContactController extends Controller
     }
 
     /**
+     * 問い合わせ内容の修正
+     */
+    public function back(Request $request)
+    {
+        return redirect()
+            ->route('contacts.index')
+            ->withInput($request->all());
+    }
+
+    /**
      * お問い合わせ内容の保存
      */
-    public function store(ContactRequest $request)
+    public function store(StoreContactRequest $request): RedirectResponse
     {
         $validated = $request->validated();
         $contactData =
@@ -69,13 +82,13 @@ class ContactController extends Controller
             $validated['tag_ids'] ?? []
         );
 
-        return redirect()->route('contact.thanks');
+        return redirect()->route('contacts.thanks');
     }
 
     /**
      * サンクスページ表示
      */
-    public function thanks()
+    public function thanks(): View
     {
         return view('contact.thanks');
     }
@@ -83,7 +96,7 @@ class ContactController extends Controller
     /**
      * エクスポート
      */
-    public function export(ContactExportRequest $request): StreamedResponse
+    public function export(ExportContactRequest $request): StreamedResponse
     {
         $validated = $request->validated();
 
@@ -151,10 +164,10 @@ class ContactController extends Controller
             foreach ($contacts as $contact) {
                 fputcsv($stream, [
                     $contact->id,
-                    $contact->first_name.' '.$contact->last_name,
+                    "{$contact->first_name} {$contact->last_name}",
                     $contact->gender_label,
                     $contact->email,
-                    $contact->tel,
+                    "=\"{$contact->tel}\"",
                     $contact->address,
                     $contact->building,
                     $contact->category?->content,

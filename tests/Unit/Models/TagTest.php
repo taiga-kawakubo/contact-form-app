@@ -14,11 +14,10 @@ class TagTest extends TestCase
 
     public function test_タグは複数のお問い合わせを持つ(): void
     {
-
-        // テスト用のCategory・Contact・Tagを作成
         $category = Category::create([
             'content' => '商品のお届けについて',
         ]);
+
         $contact1 = Contact::create([
             'category_id' => $category->id,
             'first_name' => '太郎',
@@ -30,6 +29,7 @@ class TagTest extends TestCase
             'building' => null,
             'detail' => '商品についての問い合わせ',
         ]);
+
         $contact2 = Contact::create([
             'category_id' => $category->id,
             'first_name' => '花子',
@@ -41,21 +41,26 @@ class TagTest extends TestCase
             'building' => 'サンプルマンション101',
             'detail' => '配送についての問い合わせ',
         ]);
+
         $tag = Tag::create([
             'name' => '重要',
         ]);
 
-        // Tagと2件のContactを関連付ける
         $tag->contacts()->sync([
             $contact1->id,
             $contact2->id,
         ]);
-        $contacts = $tag->contacts;
 
-        // Tagに関連するContactが2件取得できることを確認
-        $this->assertCount(
-            2,
-            $contacts
+        $tag->load('contacts');
+
+        $this->assertCount(2, $tag->contacts);
+
+        $this->assertEqualsCanonicalizing(
+            [
+                $contact1->id,
+                $contact2->id,
+            ],
+            $tag->contacts->pluck('id')->all()
         );
     }
 }

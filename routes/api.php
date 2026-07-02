@@ -1,6 +1,11 @@
 <?php
 
-use App\Http\Controllers\Api\v1\ContactController;
+use App\Http\Controllers\Api\V1\ContactController;
 use Illuminate\Support\Facades\Route;
 
-Route::apiResource('v1/contacts', ContactController::class);
+// 公開API(認証不要)
+Route::prefix('v1')
+    ->name('api.v1.')
+    ->group(function () {
+        Route::apiResource('contacts', ContactController::class);
+    });

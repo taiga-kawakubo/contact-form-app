@@ -45,7 +45,7 @@ class ContactIndexApiTest extends TestCase
         ]);
     }
 
-    public function test_お問い合わせ一覧の_jso_n構造が正しい(): void
+    public function test_お問い合わせ一覧のレスポンス構造が正しい(): void
     {
         $category = Category::firstOrFail();
 
@@ -544,7 +544,7 @@ class ContactIndexApiTest extends TestCase
         $response->assertJsonPath('data.2.first_name', '古いデータ');
     }
 
-    public function test_お問い合わせ_ap_iはデフォルト20件でページネーションされる(): void
+    public function test_お問い合わせ一覧はデフォルト20件でページネーションされる(): void
     {
         $category = Category::firstOrFail();
 
@@ -728,7 +728,7 @@ class ContactIndexApiTest extends TestCase
         ]);
     }
 
-    public function test_不正な性別値はバリデーションエラーになる(): void
+    public function test_不正な性別値はバリデーションエラーとなりメッセージが返る(): void
     {
         $response = $this->getJson('/api/v1/contacts?gender=999');
 
@@ -737,9 +737,14 @@ class ContactIndexApiTest extends TestCase
         $response->assertJsonValidationErrors([
             'gender',
         ]);
+
+        $response->assertJsonPath(
+            'errors.gender.0',
+            '性別の値が不正です'
+        );
     }
 
-    public function test_存在しないカテゴリーidはバリデーションエラーになる(): void
+    public function test_存在しないカテゴリーidはバリデーションエラーとなりメッセージが返る(): void
     {
         $response = $this->getJson('/api/v1/contacts?category_id=999999');
 
@@ -748,6 +753,11 @@ class ContactIndexApiTest extends TestCase
         $response->assertJsonValidationErrors([
             'category_id',
         ]);
+
+        $response->assertJsonPath(
+            'errors.category_id.0',
+            '選択されたカテゴリーが存在しません'
+        );
     }
 
     public function test_日付形式でない入力はバリデーションエラーになる(): void

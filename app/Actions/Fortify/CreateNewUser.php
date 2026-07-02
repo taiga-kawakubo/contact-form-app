@@ -14,7 +14,7 @@ class CreateNewUser implements CreatesNewUsers
     use PasswordValidationRules;
 
     /**
-     * Validate and create a newly registered user.
+     * 新規登録ユーザーの入力値を検証し、ユーザーを作成する。
      *
      * @param  array<string, string>  $input
      *
@@ -36,7 +36,7 @@ class CreateNewUser implements CreatesNewUsers
             'email.required' => 'メールアドレスを入力してください',
             'email.email' => 'メールアドレスはメール形式で入力してください',
             'password.required' => 'パスワードを入力してください',
-            'password.min' => 'パスワードは８文字以上で入力してください',
+            'password.min' => 'パスワードは8文字以上で入力してください',
             'password.confirmed' => 'パスワードと一致しません',
         ])->validate();
 

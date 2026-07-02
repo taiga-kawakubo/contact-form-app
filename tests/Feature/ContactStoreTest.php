@@ -13,6 +13,9 @@ class ContactStoreTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * 検証に必要なカテゴリーを作成する
+     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -22,7 +25,7 @@ class ContactStoreTest extends TestCase
     public function test_お問い合わせ入力画面が表示される(): void
     {
         $response = $this->get(
-            route('contact.index')
+            route('contacts.index')
         );
 
         $response->assertOk();
@@ -43,7 +46,7 @@ class ContactStoreTest extends TestCase
         ]);
 
         $response = $this->post(
-            route('contact.confirm'),
+            route('contacts.confirm'),
             [
                 'first_name' => '山田',
                 'last_name' => '太郎',
@@ -84,9 +87,9 @@ class ContactStoreTest extends TestCase
         ]);
 
         $response = $this
-            ->from(route('contact.index'))
+            ->from(route('contacts.index'))
             ->post(
-                route('contact.confirm'),
+                route('contacts.confirm'),
                 [
                     'first_name' => '',
                     'last_name' => '太郎',
@@ -104,7 +107,7 @@ class ContactStoreTest extends TestCase
             );
 
         $response->assertRedirect(
-            route('contact.index')
+            route('contacts.index')
         );
 
         $response->assertSessionHasErrors([
@@ -125,7 +128,7 @@ class ContactStoreTest extends TestCase
         ]);
 
         $response = $this->post(
-            route('contact.store'),
+            route('contacts.store'),
             [
                 'first_name' => '山田',
                 'last_name' => '太郎',
@@ -144,7 +147,7 @@ class ContactStoreTest extends TestCase
         );
 
         $response->assertRedirect(
-            route('contact.thanks')
+            route('contacts.thanks')
         );
 
         $this->assertDatabaseHas(
@@ -191,9 +194,9 @@ class ContactStoreTest extends TestCase
         ]);
 
         $response = $this
-            ->from(route('contact.index'))
+            ->from(route('contacts.index'))
             ->post(
-                route('contact.store'),
+                route('contacts.store'),
                 [
                     'first_name' => '山田',
                     'last_name' => '太郎',
@@ -211,7 +214,7 @@ class ContactStoreTest extends TestCase
             );
 
         $response->assertRedirect(
-            route('contact.index')
+            route('contacts.index')
         );
 
         $response->assertSessionHasErrors([

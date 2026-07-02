@@ -76,7 +76,7 @@ class ContactUpdateApiTest extends TestCase
         ]);
     }
 
-    public function test_更新成功時に_json構造が正しい(): void
+    public function test_更新成功時にレスポンス構造が正しい(): void
     {
         $contact = Contact::factory()->create([
             'first_name' => '更新前姓',
@@ -120,7 +120,7 @@ class ContactUpdateApiTest extends TestCase
         ]);
     }
 
-    public function test_更新成功時にカテゴリ情報が_jsonに含まれる(): void
+    public function test_更新成功時にカテゴリ情報がレスポンスに含まれる(): void
     {
         $oldCategory = Category::firstOrFail();
 
@@ -209,13 +209,17 @@ class ContactUpdateApiTest extends TestCase
         ]);
     }
 
-    public function test_存在しないお問い合わせ_i_dは更新できない(): void
+    public function test_存在しないお問い合わせidは更新できない(): void
     {
         $data = $this->validData();
 
         $response = $this->putJson('/api/v1/contacts/999999', $data);
 
         $response->assertNotFound();
+
+        $response->assertJson([
+            'error' => 'お問い合わせが見つかりませんでした。',
+        ]);
     }
 
     public function test_first_nameが空の場合はバリデーションエラーになる(): void
@@ -226,7 +230,7 @@ class ContactUpdateApiTest extends TestCase
             'first_name' => '',
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
@@ -243,7 +247,7 @@ class ContactUpdateApiTest extends TestCase
             'last_name' => '',
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
@@ -260,7 +264,7 @@ class ContactUpdateApiTest extends TestCase
             'gender' => '',
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
@@ -277,7 +281,7 @@ class ContactUpdateApiTest extends TestCase
             'email' => '',
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
@@ -294,7 +298,7 @@ class ContactUpdateApiTest extends TestCase
             'tel' => '',
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
@@ -311,7 +315,7 @@ class ContactUpdateApiTest extends TestCase
             'address' => '',
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
@@ -328,7 +332,7 @@ class ContactUpdateApiTest extends TestCase
             'category_id' => '',
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
@@ -345,7 +349,7 @@ class ContactUpdateApiTest extends TestCase
             'detail' => '',
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
@@ -354,7 +358,7 @@ class ContactUpdateApiTest extends TestCase
         ]);
     }
 
-    public function test_存在しないgenderはバリデーションエラーになる(): void
+    public function test_存在しないgenderはバリデーションエラーとなりメッセージが返る(): void
     {
         $contact = Contact::factory()->create();
 
@@ -362,16 +366,21 @@ class ContactUpdateApiTest extends TestCase
             'gender' => 999,
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
         $response->assertJsonValidationErrors([
             'gender',
         ]);
+
+        $this->assertSame(
+            '性別の値が不正です',
+            $response->json('errors.gender.0')
+        );
     }
 
-    public function test_存在しないcategory_idはバリデーションエラーになる(): void
+    public function test_存在しないcategory_idはバリデーションエラーとなりメッセージが返る(): void
     {
         $contact = Contact::factory()->create();
 
@@ -379,16 +388,20 @@ class ContactUpdateApiTest extends TestCase
             'category_id' => 999999,
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
         $response->assertJsonValidationErrors([
             'category_id',
         ]);
+        $this->assertSame(
+            '選択されたカテゴリーが存在しません',
+            $response->json('errors.category_id.0')
+        );
     }
 
-    public function test_存在しないtag_idsはバリデーションエラーになる(): void
+    public function test_存在しないtag_idsはバリデーションエラーとなりメッセージが返る(): void
     {
         $contact = Contact::factory()->create();
 
@@ -398,13 +411,18 @@ class ContactUpdateApiTest extends TestCase
             ],
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
         $response->assertJsonValidationErrors([
             'tag_ids.0',
         ]);
+
+        $this->assertSame(
+            '選択されたタグが存在しません',
+            $response->json('errors')['tag_ids.0'][0]
+        );
     }
 
     public function test_tag_idsが配列でない場合はバリデーションエラーになる(): void
@@ -415,7 +433,7 @@ class ContactUpdateApiTest extends TestCase
             'tag_ids' => 'タグ',
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
@@ -432,7 +450,7 @@ class ContactUpdateApiTest extends TestCase
             'email' => 'not-email',
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
@@ -441,7 +459,7 @@ class ContactUpdateApiTest extends TestCase
         ]);
     }
 
-    public function test_telが数字以外の場合はバリデーションエラーになる(): void
+    public function test_telが数字以外の場合はバリデーションエラーとなりメッセージが返る(): void
     {
         $contact = Contact::factory()->create();
 
@@ -449,13 +467,18 @@ class ContactUpdateApiTest extends TestCase
             'tel' => '090-aaaa-bbbb',
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
         $response->assertJsonValidationErrors([
             'tel',
         ]);
+
+        $this->assertSame(
+            '電話番号はハイフンなしの10〜11桁で入力してください',
+            $response->json('errors.tel.0')
+        );
     }
 
     public function test_first_nameは255文字まで更新できる(): void
@@ -466,7 +489,7 @@ class ContactUpdateApiTest extends TestCase
             'first_name' => str_repeat('a', 255),
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertOk();
 
@@ -486,7 +509,7 @@ class ContactUpdateApiTest extends TestCase
             'first_name' => str_repeat('a', 256),
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
@@ -503,7 +526,7 @@ class ContactUpdateApiTest extends TestCase
             'last_name' => str_repeat('a', 255),
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertOk();
 
@@ -523,7 +546,7 @@ class ContactUpdateApiTest extends TestCase
             'last_name' => str_repeat('a', 256),
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
@@ -540,7 +563,7 @@ class ContactUpdateApiTest extends TestCase
             'tel' => '123456789',
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
@@ -557,7 +580,7 @@ class ContactUpdateApiTest extends TestCase
             'tel' => '123456789012',
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
@@ -574,7 +597,7 @@ class ContactUpdateApiTest extends TestCase
             'detail' => str_repeat('あ', 120),
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertOk();
 
@@ -594,12 +617,59 @@ class ContactUpdateApiTest extends TestCase
             'detail' => str_repeat('あ', 121),
         ]);
 
-        $response = $this->putJson('/api/v1/contacts/'.$contact->id, $data);
+        $response = $this->putJson("/api/v1/contacts/{$contact->id}", $data);
 
         $response->assertStatus(422);
 
         $response->assertJsonValidationErrors([
             'detail',
         ]);
+    }
+
+    public function test_必須項目が未入力の場合は指定された日本語メッセージが返る(): void
+    {
+        $response = $this->postJson('/api/v1/contacts', []);
+
+        $response->assertStatus(422);
+
+        $this->assertSame(
+            '姓を入力してください',
+            $response->json('errors.first_name.0')
+        );
+
+        $this->assertSame(
+            '名を入力してください',
+            $response->json('errors.last_name.0')
+        );
+
+        $this->assertSame(
+            '性別を選択してください',
+            $response->json('errors.gender.0')
+        );
+
+        $this->assertSame(
+            'メールアドレスを入力してください',
+            $response->json('errors.email.0')
+        );
+
+        $this->assertSame(
+            '電話番号を入力してください',
+            $response->json('errors.tel.0')
+        );
+
+        $this->assertSame(
+            '住所を入力してください',
+            $response->json('errors.address.0')
+        );
+
+        $this->assertSame(
+            'お問い合わせの種類を選択してください',
+            $response->json('errors.category_id.0')
+        );
+
+        $this->assertSame(
+            'お問い合わせ内容を入力してください',
+            $response->json('errors.detail.0')
+        );
     }
 }
